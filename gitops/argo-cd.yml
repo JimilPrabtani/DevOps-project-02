@@ -12,8 +12,9 @@ spec:
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: boutique
-  syncPolicy: {}
-  # syncPolicy:
-  #   automated:
-  #     prune: true
-  #     selfHeal: true
+  syncPolicy:
+    automated:
+      prune: true        # delete resources removed from Git
+      selfHeal: true     # auto-revert manual cluster changes back to Git
+    syncOptions:
+      - CreateNamespace=true   # auto-create the boutique namespace on first sync
