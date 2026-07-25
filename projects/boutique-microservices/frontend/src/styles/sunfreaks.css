@@ -1,0 +1,290 @@
+/* =============================================================================
+   SUNFREAKS — CLEAN iOS-INSPIRED DESIGN SYSTEM
+   Refined Biotech & Luxury Aesthetic: System iOS Typography, Translucent
+   Glassmorphism, Soft Ambient Dropshadows & Subtle UI Controls.
+   ========================================================================== */
+
+:root {
+  /* --- Core Brand Palette --------------------------------------------------
+     Rich aubergine void ground, dusk glass surfaces, vibrant solar accent.
+     ------------------------------------------------------------------------ */
+  --sf-void: #120d1a;        /* Sleek aubergine-black ground */
+  --sf-ink: #0c0810;         /* Deep obsidian black */
+  --sf-dusk: rgba(32, 23, 46, 0.75); /* Translucent glass dusk surface */
+  --sf-cream: #faf4e8;       /* Warm parchment off-white */
+  --sf-sand: #d6c8b4;        /* Soft neutral sand */
+
+  --sf-solar: #ff5b24;       /* Solar orange accent */
+  --sf-flare: #ffc24b;       /* Warm gold accent */
+  --sf-pink: #e65f8e;        /* Soft rose pink */
+  --sf-teal: #2f9c95;        /* Soft teal */
+  --sf-plasma: #a78bfa;      /* Violet accent */
+  --sf-mint: #5eead4;        /* Clean mint */
+
+  /* --- Typography Stack (iOS System First) --------------------------------- */
+  --sf-font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;
+  --sf-font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
+  --sf-font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  /* Fluid scale - Scaled down & proportional */
+  --sf-text-mantra: clamp(2.2rem, 6vw, 4.2rem);
+  --sf-text-h1: clamp(1.85rem, 4vw, 2.75rem);
+  --sf-text-h2: clamp(1.5rem, 3vw, 2.15rem);
+  --sf-text-h3: clamp(1.25rem, 2vw, 1.6rem);
+  --sf-text-lead: clamp(1rem, 1.3vw, 1.15rem);
+  --sf-text-body: 0.95rem;
+  --sf-text-small: 0.85rem;
+  --sf-text-micro: 0.75rem;
+
+  /* --- Space & Shape ------------------------------------------------------- */
+  --sf-gap-xs: 0.5rem;
+  --sf-gap-sm: 1rem;
+  --sf-gap-md: 2rem;
+  --sf-gap-lg: 3.5rem;
+  --sf-gap-xl: clamp(3rem, 6vw, 5.5rem);
+
+  --sf-radius: 16px;
+  --sf-radius-sm: 10px;
+  --sf-radius-pill: 999px;
+  --sf-maxw: 1200px;
+
+  /* --- Motion ------------------------------------------------------------- */
+  --sf-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --sf-dur: 200ms;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.sf {
+  background: var(--sf-void);
+  color: var(--sf-cream);
+  font-family: var(--sf-font-body);
+  font-size: var(--sf-text-body);
+  line-height: 1.55;
+  overflow-x: clip;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.sf > * {
+  position: relative;
+  z-index: 2;
+}
+
+.sf__shell {
+  width: min(100% - 2.5rem, var(--sf-maxw));
+  margin-inline: auto;
+}
+
+/* ==========================================================================
+   Typography Primitives
+   ========================================================================== */
+
+.sf-display {
+  font-family: var(--sf-font-display);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.sf-h2 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-h2);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.sf-h3 {
+  font-family: var(--sf-font-display);
+  font-size: var(--sf-text-h3);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.sf-lead {
+  font-size: var(--sf-text-lead);
+  line-height: 1.5;
+  color: var(--sf-sand);
+  margin: 0;
+}
+
+/* Clean iOS Status Pill */
+.sf-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--sf-font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sf-flare);
+  background: rgba(255, 194, 75, 0.1);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--sf-radius-pill);
+  border: 1px solid rgba(255, 194, 75, 0.25);
+  margin: 0 0 var(--sf-gap-sm);
+}
+
+.sf-eyebrow::before {
+  content: '•';
+  color: var(--sf-solar);
+  font-size: 1rem;
+}
+
+/* Color Utilities */
+.sf-solar { color: var(--sf-solar); }
+.sf-flare { color: var(--sf-flare); }
+.sf-pink { color: var(--sf-pink); }
+.sf-teal { color: var(--sf-teal); }
+.sf-plasma { color: var(--sf-plasma); }
+.sf-mint { color: var(--sf-mint); }
+
+/* ==========================================================================
+   Clean iOS Buttons (Soft, Glassy, Subtle)
+   ========================================================================== */
+
+.sf-btn {
+  --btn-bg: rgba(255, 255, 255, 0.08);
+  --btn-fg: var(--sf-cream);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--sf-radius-sm);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-family: var(--sf-font-body);
+  font-size: var(--sf-text-small);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--sf-dur) var(--sf-ease);
+}
+
+.sf-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.sf-btn:active {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+.sf-btn--solar {
+  --btn-bg: var(--sf-solar);
+  --btn-fg: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(255, 91, 36, 0.3);
+}
+
+.sf-btn--solar:hover {
+  background: #ff6b38;
+  box-shadow: 0 6px 20px rgba(255, 91, 36, 0.45);
+}
+
+.sf-btn--pink {
+  --btn-bg: rgba(230, 95, 142, 0.15);
+  --btn-fg: var(--sf-pink);
+  border-color: rgba(230, 95, 142, 0.3);
+}
+
+.sf-btn--pink:hover {
+  background: rgba(230, 95, 142, 0.25);
+}
+
+.sf-btn--teal {
+  --btn-bg: rgba(47, 156, 149, 0.15);
+  --btn-fg: var(--sf-teal);
+  border-color: rgba(47, 156, 149, 0.3);
+}
+
+.sf-btn--teal:hover {
+  background: rgba(47, 156, 149, 0.25);
+}
+
+.sf-btn--ghost {
+  background: transparent;
+  color: var(--sf-sand);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.sf-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sf-cream);
+}
+
+/* ==========================================================================
+   Clean iOS Cards & Frames
+   ========================================================================== */
+
+.sf-retro-box {
+  background: rgba(28, 21, 40, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--sf-radius);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  transition: all var(--sf-dur) var(--sf-ease);
+}
+
+.sf-retro-box:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 91, 36, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ==========================================================================
+   Sections
+   ========================================================================== */
+
+.sf-section {
+  padding-block: var(--sf-gap-xl);
+}
+
+.sf-section--cream {
+  background: rgba(250, 244, 238, 0.96);
+  color: #1a1423;
+}
+
+.sf-section--cream .sf-lead { color: #4a3e35; }
+.sf-section--cream .sf-eyebrow { 
+  background: rgba(255, 91, 36, 0.1); 
+  color: var(--sf-solar); 
+  border-color: rgba(255, 91, 36, 0.25);
+}
+
+.sf-section--ink {
+  background: #0d0914;
+}
+
+/* Accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

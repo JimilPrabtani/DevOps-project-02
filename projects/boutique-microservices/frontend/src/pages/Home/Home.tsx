@@ -3,16 +3,12 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Button,
   Box,
   Paper,
-  IconButton,
   Fade,
   Slide,
+  Chip,
 } from '@mui/material';
 import {
   ArrowForward as ArrowForwardIcon,
@@ -28,8 +24,12 @@ import { useCart } from '../../contexts/CartContext';
 import ProductCard from '../../components/common/ProductCard';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 
+const CATEGORIES = ['All', 'Clothing', 'Accessories', 'Bags', 'Jewelry', 'Shoes'];
+
 const Home: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
 
@@ -37,9 +37,10 @@ const Home: React.FC = () => {
     const loadProducts = async () => {
       console.log('[Home] Loading products...');
       try {
-        const featuredProducts = await productService.getAll();
-        console.log('[Home] Got products:', featuredProducts.length);
-        setProducts(featuredProducts.slice(0, 8));
+        const fetched = await productService.getAll();
+        console.log('[Home] Got products:', fetched.length);
+        setAllProducts(fetched);
+        setDisplayedProducts(fetched.slice(0, 8));
       } catch (error) {
         console.error('[Home] Error loading products:', error);
       } finally {
@@ -50,10 +51,22 @@ const Home: React.FC = () => {
     loadProducts();
   }, []);
 
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
+    if (cat === 'All') {
+      setDisplayedProducts(allProducts.slice(0, 8));
+    } else {
+      const filtered = allProducts.filter(
+        p => p.category.toLowerCase() === cat.toLowerCase()
+      );
+      setDisplayedProducts(filtered.slice(0, 8));
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
-        <Box sx={{ py: 8 }}>
+        <Box sx={{ py: 6 }}>
           <LoadingSkeleton count={8} />
         </Box>
       </Container>
@@ -65,111 +78,139 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #1a1a1a 0%, #424242 100%)',
-          color: 'white',
-          py: { xs: 8, md: 12 },
+          background: 'radial-gradient(circle at 60% 30%, rgba(255, 91, 36, 0.15) 0%, rgba(18, 13, 26, 0.95) 70%)',
+          color: '#FAF4E8',
+          py: { xs: 5, md: 8 },
+          borderRadius: '24px',
+          mb: 5,
           position: 'relative',
           overflow: 'hidden',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         }}
       >
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid size={{ xs: 12, md: 6 }}>
-              <Fade in timeout={1000}>
+              <Fade in timeout={800}>
                 <Box>
+                  <Box
+                    sx={{
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      color: '#FFC24B',
+                      backgroundColor: 'rgba(255, 194, 75, 0.1)',
+                      display: 'inline-block',
+                      px: 2,
+                      py: 0.5,
+                      borderRadius: '999px',
+                      border: '1px solid rgba(255, 194, 75, 0.25)',
+                      mb: 2.5,
+                      letterSpacing: '0.03em',
+                    }}
+                  >
+                    • BIOTECH & LUXURY BOUTIQUE
+                  </Box>
                   <Typography
                     variant="h1"
                     component="h1"
                     sx={{
                       fontWeight: 700,
-                      mb: 3,
-                      fontSize: { xs: '2.5rem', md: '3.5rem' },
+                      mb: 2.5,
+                      fontSize: { xs: '2.2rem', md: '3.2rem' },
+                      letterSpacing: '-0.03em',
+                      lineHeight: 1.15,
                     }}
                   >
-                    Discover Timeless
-                    <Box component="span" sx={{ color: '#d4af37' }}>
-                      {' '}Elegance
+                    Discover Modern
+                    <Box component="span" sx={{ color: '#FF5B24', display: 'block' }}>
+                      Elegance & Science
                     </Box>
                   </Typography>
                   <Typography
-                    variant="h5"
+                    variant="body1"
                     component="p"
                     sx={{
                       mb: 4,
                       lineHeight: 1.6,
-                      fontWeight: 300,
-                      opacity: 0.9,
+                      color: 'rgba(214, 200, 180, 0.8)',
+                      maxWidth: '44ch',
                     }}
                   >
                     Indulge in our curated collection of luxury products, 
-                    where sophistication meets exceptional quality.
+                    where clean formulation meets exceptional quality.
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                     <Button
                       variant="contained"
                       size="large"
-                      endIcon={<ShoppingBagIcon />}
-                      href="/products"
+                      endIcon={<ShoppingBagIcon sx={{ fontSize: '1.1rem' }} />}
+                      href="#products-showcase"
                       sx={{
-                        backgroundColor: '#d4af37',
-                        color: '#1a1a1a',
-                        px: 4,
-                        py: 1.5,
-                        '&:hover': {
-                          backgroundColor: '#b8941f',
-                        },
+                        px: 3.5,
+                        py: 1.25,
+                        borderRadius: '12px',
                       }}
                     >
-                      Shop Collection
+                      Browse Products
                     </Button>
                     <Button
                       variant="outlined"
                       size="large"
-                      endIcon={<ArrowForwardIcon />}
-                      href="#featured"
+                      endIcon={<ArrowForwardIcon sx={{ fontSize: '1.1rem' }} />}
+                      href="/products"
                       sx={{
-                        borderColor: 'white',
-                        color: 'white',
-                        px: 4,
-                        py: 1.5,
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          borderColor: 'white',
-                        },
+                        px: 3.5,
+                        py: 1.25,
+                        borderRadius: '12px',
                       }}
                     >
-                      Explore More
+                      All Collections
                     </Button>
                   </Box>
                 </Box>
               </Fade>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <Slide in timeout={1500} direction="right">
+              <Slide in timeout={1000} direction="right">
                 <Box
                   sx={{
-                    height: { xs: 300, md: 400 },
-                    background: 'linear-gradient(45deg, #d4af37 0%, #f4e5c2 100%)',
-                    borderRadius: 4,
+                    height: { xs: 240, md: 320 },
+                    background: 'linear-gradient(135deg, rgba(255, 91, 36, 0.25) 0%, rgba(255, 194, 75, 0.15) 50%, rgba(230, 95, 142, 0.2) 100%)',
+                    borderRadius: '20px',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    backdropFilter: 'blur(20px)',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     position: 'relative',
                     overflow: 'hidden',
+                    p: 4,
                   }}
                 >
                   <Typography
                     variant="h2"
                     sx={{
-                      fontFamily: '"Playfair Display", serif',
-                      color: '#1a1a1a',
+                      fontWeight: 700,
+                      color: '#FAF4E8',
                       textAlign: 'center',
-                      p: 4,
+                      fontSize: { xs: '1.8rem', md: '2.4rem' },
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1.2,
                     }}
                   >
-                    LUXURY
-                    <br />
-                    REDEFINED
+                    CLEAN & PROTECTED
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1.5,
+                      color: 'rgba(250, 244, 232, 0.7)',
+                      textAlign: 'center',
+                      maxWidth: '30ch',
+                    }}
+                  >
+                    Melanin-rich first, invisible protection with zero white cast.
                   </Typography>
                 </Box>
               </Slide>
@@ -178,117 +219,55 @@ const Home: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Features Section */}
-      <Container maxWidth="lg">
-        <Box sx={{ py: 8 }}>
-          <Grid container spacing={4}>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
-                <ShippingIcon sx={{ fontSize: 48, color: '#d4af37', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Free Shipping
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  On orders over $500
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
-                <SecurityIcon sx={{ fontSize: 48, color: '#d4af37', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Secure Payment
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  100% secure transactions
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
-                <StarIcon sx={{ fontSize: 48, color: '#d4af37', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Premium Quality
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Carefully selected products
-                </Typography>
-              </Paper>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                }}
-              >
-                <RefreshIcon sx={{ fontSize: 48, color: '#d4af37', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                  Easy Returns
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  30-day return policy
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Box>
-      </Container>
-
-      {/* Featured Products Section */}
-      <Box sx={{ backgroundColor: '#f8f8f8', py: 8 }} id="featured">
+      {/* Prominent Featured Products Showcase Section (Right below Hero) */}
+      <Box sx={{ py: 3, mb: 6 }} id="products-showcase">
         <Container maxWidth="lg">
-          <Box sx={{ textAlign: 'center', mb: 6 }}>
-            <Typography
-              variant="h4"
-              component="h2"
-              gutterBottom
-              sx={{ fontFamily: '"Playfair Display", serif' }}
-            >
-              Featured Products
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-              Discover our handpicked selection of luxury items
-            </Typography>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'flex-start', md: 'center' }, justifyContent: 'space-between', mb: 3.5, gap: 2 }}>
+            <Box>
+              <Typography
+                variant="h2"
+                component="h2"
+                sx={{ fontWeight: 700, color: '#FAF4E8', fontSize: '1.75rem', mb: 0.5 }}
+              >
+                Featured <Box component="span" sx={{ color: '#FF5B24' }}>Products</Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.88rem', color: 'rgba(250, 244, 232, 0.6)' }}>
+                Handpicked boutique items available right now
+              </Typography>
+            </Box>
+
+            {/* Interactive Category Filter Pills */}
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {CATEGORIES.map((cat) => {
+                const isSelected = selectedCategory === cat;
+                return (
+                  <Chip
+                    key={cat}
+                    label={cat}
+                    clickable
+                    onClick={() => handleCategorySelect(cat)}
+                    sx={{
+                      borderRadius: '999px',
+                      fontSize: '0.8rem',
+                      fontWeight: isSelected ? 600 : 400,
+                      px: 1,
+                      backgroundColor: isSelected ? 'rgba(255, 91, 36, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                      color: isSelected ? '#FF5B24' : 'rgba(250, 244, 232, 0.7)',
+                      border: isSelected ? '1px solid rgba(255, 91, 36, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                      transition: 'all 200ms ease',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 91, 36, 0.18)',
+                        color: '#FAF4E8',
+                      },
+                    }}
+                  />
+                );
+              })}
+            </Box>
           </Box>
           
-          <Grid container spacing={4}>
-            {products.map((product) => (
+          <Grid container spacing={3}>
+            {displayedProducts.map((product) => (
               <Grid size={{ xs: 12, sm: 6, md: 3 }} key={product.id}>
                 <ProductCard
                   product={product}
@@ -298,22 +277,159 @@ const Home: React.FC = () => {
             ))}
           </Grid>
 
-          <Box sx={{ textAlign: 'center', mt: 6 }}>
+          {displayedProducts.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 6 }}>
+              <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)' }}>
+                No products found in this category.
+              </Typography>
+            </Box>
+          )}
+
+          <Box sx={{ textAlign: 'center', mt: 4 }}>
             <Button
               variant="outlined"
-              size="large"
+              size="medium"
               href="/products"
-              endIcon={<ArrowForwardIcon />}
+              endIcon={<ArrowForwardIcon sx={{ fontSize: '1rem' }} />}
               sx={{
-                px: 4,
-                py: 1.5,
+                px: 3.5,
+                py: 1,
+                borderRadius: '12px',
               }}
             >
-              View All Products
+              View Full Catalog ({allProducts.length} items)
             </Button>
           </Box>
         </Container>
       </Box>
+
+      {/* Features Section */}
+      <Container maxWidth="lg">
+        <Box sx={{ mb: 6 }}>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  textAlign: 'center',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(28, 21, 40, 0.6)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  transition: 'transform 200ms ease, border-color 200ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: 'rgba(255, 91, 36, 0.3)',
+                  },
+                }}
+              >
+                <ShippingIcon sx={{ fontSize: 36, color: '#FFC24B', mb: 1.5 }} />
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '0.98rem' }}>
+                  Free Shipping
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  On orders over $500
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  textAlign: 'center',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(28, 21, 40, 0.6)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  transition: 'transform 200ms ease, border-color 200ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: 'rgba(255, 91, 36, 0.3)',
+                  },
+                }}
+              >
+                <SecurityIcon sx={{ fontSize: 36, color: '#2F9C95', mb: 1.5 }} />
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '0.98rem' }}>
+                  Secure Payment
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  100% encrypted checkout
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  textAlign: 'center',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(28, 21, 40, 0.6)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  transition: 'transform 200ms ease, border-color 200ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: 'rgba(255, 91, 36, 0.3)',
+                  },
+                }}
+              >
+                <StarIcon sx={{ fontSize: 36, color: '#E65F8E', mb: 1.5 }} />
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '0.98rem' }}>
+                  Premium Quality
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  Biotech active formulas
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  textAlign: 'center',
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(28, 21, 40, 0.6)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  transition: 'transform 200ms ease, border-color 200ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: 'rgba(255, 91, 36, 0.3)',
+                  },
+                }}
+              >
+                <RefreshIcon sx={{ fontSize: 36, color: '#5EEAD4', mb: 1.5 }} />
+                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '0.98rem' }}>
+                  Easy Returns
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                  30-day return policy
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Box>
+      </Container>
     </>
   );
 };

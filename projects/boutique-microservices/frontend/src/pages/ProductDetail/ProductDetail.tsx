@@ -7,15 +7,11 @@ import {
   Button,
   Grid,
   IconButton,
-  Card,
   CardMedia,
-  CardContent,
   Chip,
   Paper,
-  Divider,
   Breadcrumbs,
   Link,
-  Skeleton,
   Snackbar,
   Alert,
   Tabs,
@@ -30,7 +26,6 @@ import {
   Refresh as RefreshIcon,
   Star as StarIcon,
   FavoriteBorder as WishlistIcon,
-  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { productService } from '../../services/productService';
 import { Product } from '../../types';
@@ -67,8 +62,6 @@ const ProductDetail: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [tabValue, setTabValue] = useState(0);
   const { addItem } = useCart();
-
-  const relatedProducts: Product[] = []; // This would come from an API call
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -123,10 +116,10 @@ const ProductDetail: React.FC = () => {
     return (
       <Container maxWidth="md">
         <Box sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="h4" gutterBottom>
+          <Typography variant="h3" gutterBottom>
             Product not found
           </Typography>
-          <Button variant="contained" onClick={() => navigate('/products')}>
+          <Button variant="contained" onClick={() => navigate('/products')} sx={{ borderRadius: '12px' }}>
             Back to Products
           </Button>
         </Box>
@@ -136,31 +129,50 @@ const ProductDetail: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
+      <Box sx={{ py: 3 }}>
         {/* Breadcrumbs */}
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link component="button" variant="body1" onClick={() => navigate('/')}>
+        <Breadcrumbs sx={{ mb: 3, fontSize: '0.85rem' }}>
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => navigate('/')}
+            sx={{ color: 'rgba(250, 244, 232, 0.6)', textDecoration: 'none' }}
+          >
             Home
           </Link>
-          <Link component="button" variant="body1" onClick={() => navigate('/products')}>
+          <Link
+            component="button"
+            variant="body2"
+            onClick={() => navigate('/products')}
+            sx={{ color: 'rgba(250, 244, 232, 0.6)', textDecoration: 'none' }}
+          >
             Products
           </Link>
-          <Typography variant="body1" color="text.primary">
+          <Typography variant="body2" sx={{ color: '#FAF4E8', fontWeight: 500 }}>
             {product.name}
           </Typography>
         </Breadcrumbs>
 
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper elevation={2} sx={{ p: 2 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 1.5,
+                borderRadius: '20px',
+                overflow: 'hidden',
+                backgroundColor: 'rgba(28, 21, 40, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
               <CardMedia
                 component="img"
                 sx={{
-                  height: 600,
+                  height: { xs: 320, md: 480 },
                   objectFit: 'cover',
-                  borderRadius: 2,
+                  borderRadius: '16px',
                 }}
-                image={product.imageUrl}
+                image={product.imageUrl || '/images/placeholder.svg'}
                 alt={product.name}
               />
             </Paper>
@@ -170,22 +182,44 @@ const ProductDetail: React.FC = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Product Info */}
               <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
                   <Chip
                     label={product.category}
                     size="small"
-                    variant="outlined"
-                    sx={{ textTransform: 'capitalize' }}
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.06)',
+                      borderColor: 'rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(250, 244, 232, 0.7)',
+                      fontSize: '0.75rem',
+                      textTransform: 'capitalize',
+                    }}
                   />
                   {product.isNew && (
-                    <Chip label="NEW" color="secondary" size="small" />
+                    <Chip
+                      label="NEW"
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(255, 194, 75, 0.2)',
+                        color: '#FFC24B',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    />
                   )}
                   {product.inventory <= 5 && product.inventory > 0 && (
-                    <Chip label="Only a few left!" color="warning" size="small" />
+                    <Chip
+                      label="Low Stock"
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(255, 91, 36, 0.2)',
+                        color: '#FF5B24',
+                        fontSize: '0.75rem',
+                      }}
+                    />
                   )}
                 </Box>
                 
-                <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
+                <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 700, fontSize: { xs: '1.75rem', md: '2.2rem' } }}>
                   {product.name}
                 </Typography>
                 
@@ -195,26 +229,26 @@ const ProductDetail: React.FC = () => {
                       <StarIcon
                         key={index}
                         sx={{
-                          fontSize: '1.2rem',
-                          color: index < product.rating! ? '#ffc107' : '#e0e0e0',
+                          fontSize: '1rem',
+                          color: index < product.rating! ? '#FFC24B' : 'rgba(255, 194, 75, 0.3)',
                         }}
                       />
                     ))}
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.55)' }}>
                       ({product.reviewCount || 0} reviews)
                     </Typography>
                   </Box>
                 )}
                 
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                  <Typography variant="h4" color="primary" sx={{ fontWeight: 700 }}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, mb: 2.5 }}>
+                  <Typography variant="h3" color="primary" sx={{ fontWeight: 700, fontSize: '1.8rem' }}>
                     ${(() => {
                       const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
                       return isNaN(price) || !isFinite(price) ? '0.00' : price.toFixed(2);
                     })()}
                   </Typography>
                   {product.originalPrice && product.originalPrice > product.price && (
-                    <Typography variant="h6" color="text.secondary" sx={{ textDecoration: 'line-through' }}>
+                    <Typography variant="body1" sx={{ textDecoration: 'line-through', color: 'rgba(250, 244, 232, 0.4)' }}>
                       ${(() => {
                         const price = typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice) : product.originalPrice;
                         return isNaN(price) || !isFinite(price) ? '0.00' : price.toFixed(2);
@@ -224,106 +258,102 @@ const ProductDetail: React.FC = () => {
                   {product.discountPercentage && product.discountPercentage > 0 && (
                     <Chip
                       label={`-${product.discountPercentage}%`}
-                      color="error"
                       size="small"
+                      sx={{
+                        backgroundColor: 'rgba(230, 95, 142, 0.2)',
+                        color: '#E65F8E',
+                        fontSize: '0.75rem',
+                      }}
                     />
                   )}
                 </Box>
                 
-                <Typography variant="body1" color="text.secondary" paragraph sx={{ lineHeight: 1.6 }}>
+                <Typography variant="body2" sx={{ color: 'rgba(214, 200, 180, 0.8)', mb: 3, lineHeight: 1.6 }}>
                   {product.description}
                 </Typography>
                 
-                  <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <LocalShippingIcon color="action" />
-                      <Typography variant="body2">Free shipping over $500</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <RefreshIcon color="action" />
-                      <Typography variant="body2">30-day returns</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <SecurityIcon color="action" />
-                      <Typography variant="body2">Secure payment</Typography>
-                    </Box>
+                <Box sx={{ display: 'flex', gap: 2.5, mb: 3.5, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <LocalShippingIcon sx={{ fontSize: '1rem', color: '#FFC24B' }} />
+                    <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>Free shipping over $500</Typography>
                   </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <RefreshIcon sx={{ fontSize: '1rem', color: '#5EEAD4' }} />
+                    <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>30-day returns</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <SecurityIcon sx={{ fontSize: '1rem', color: '#2F9C95' }} />
+                    <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>Encrypted checkout</Typography>
+                  </Box>
+                </Box>
               </Box>
               
               {/* Purchase Controls */}
-              <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2.5,
+                  mb: 3,
+                  borderRadius: '16px',
+                  backgroundColor: 'rgba(28, 21, 40, 0.7)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                }}
+              >
                 {product.inventory === 0 ? (
-                  <Typography variant="h6" color="error" gutterBottom>
+                  <Typography variant="h6" color="error" gutterBottom sx={{ fontSize: '1rem' }}>
                     Out of Stock
                   </Typography>
                 ) : (
-                  <>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                      <Typography variant="body1" sx={{ mr: 2, minWidth: 80 }}>
-                        Quantity:
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2.5 }}>
+                    <Typography variant="body2" sx={{ mr: 2, color: 'rgba(250, 244, 232, 0.7)' }}>
+                      Quantity:
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '10px', p: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleQuantityChange(-1)}
+                        disabled={quantity <= 1}
+                        sx={{ color: '#FAF4E8' }}
+                      >
+                        <RemoveIcon sx={{ fontSize: '0.9rem' }} />
+                      </IconButton>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          mx: 2,
+                          minWidth: '2rem',
+                          textAlign: 'center',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {quantity}
                       </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <IconButton
-                          onClick={() => handleQuantityChange(-1)}
-                          disabled={quantity <= 1}
-                          sx={{
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            '&:hover': {
-                              backgroundColor: 'action.hover',
-                            },
-                          }}
-                        >
-                          <RemoveIcon />
-                        </IconButton>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            mx: 3,
-                            minWidth: '3rem',
-                            textAlign: 'center',
-                            fontWeight: 600,
-                            fontSize: '1.1rem',
-                          }}
-                        >
-                          {quantity}
-                        </Typography>
-                        <IconButton
-                          onClick={() => handleQuantityChange(1)}
-                          disabled={quantity >= product.inventory}
-                          sx={{
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            '&:hover': {
-                              backgroundColor: 'action.hover',
-                            },
-                          }}
-                        >
-                          <AddIcon />
-                        </IconButton>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
-                        {product.inventory} available
-                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleQuantityChange(1)}
+                        disabled={quantity >= product.inventory}
+                        sx={{ color: '#FAF4E8' }}
+                      >
+                        <AddIcon sx={{ fontSize: '0.9rem' }} />
+                      </IconButton>
                     </Box>
-                  </>
+                    <Typography variant="caption" sx={{ ml: 2, color: 'rgba(250, 244, 232, 0.5)' }}>
+                      {product.inventory} in stock
+                    </Typography>
+                  </Box>
                 )}
                 
-                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1.5, mb: 1.5 }}>
                   <Button
                     variant="contained"
-                    size="large"
+                    size="medium"
                     onClick={handleAddToCart}
                     disabled={product.inventory === 0}
-                    startIcon={<ShoppingBagIcon />}
+                    startIcon={<ShoppingBagIcon sx={{ fontSize: '1rem' }} />}
                     sx={{
                       flexGrow: 1,
-                      py: 1.5,
-                      backgroundColor: '#d4af37',
-                      color: '#1a1a1a',
-                      '&:hover': {
-                        backgroundColor: '#b8941f',
-                      },
+                      py: 1.1,
+                      borderRadius: '12px',
                     }}
                   >
                     {product.inventory === 0 ? 'Out of Stock' : 'Add to Cart'}
@@ -331,47 +361,55 @@ const ProductDetail: React.FC = () => {
                   
                   <IconButton
                     sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      p: 1.5,
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '12px',
+                      p: 1.1,
+                      color: '#FAF4E8',
                     }}
                   >
-                    <WishlistIcon />
+                    <WishlistIcon sx={{ fontSize: '1.2rem' }} />
                   </IconButton>
                 </Box>
                 
                 <Button
                   variant="outlined"
-                  size="large"
+                  size="medium"
                   onClick={() => navigate('/cart')}
                   fullWidth
-                  sx={{ py: 1.5 }}
+                  sx={{ py: 1, borderRadius: '12px' }}
                 >
                   View Cart ({quantity} {quantity === 1 ? 'item' : 'items'})
                 </Button>
               </Paper>
-              
-              {/* Additional Info */}
-              <Box sx={{ mt: 'auto' }}>
-                <Typography variant="body2" color="text.secondary">
-                  SKU: {product.id}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Category: {product.category}
-                </Typography>
-              </Box>
             </Box>
           </Grid>
         </Grid>
 
         {/* Product Details Tabs */}
-        <Box sx={{ mt: 6 }}>
-          <Paper elevation={2}>
+        <Box sx={{ mt: 5 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: '16px',
+              overflow: 'hidden',
+              backgroundColor: 'rgba(28, 21, 40, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
             <Tabs
               value={tabValue}
               onChange={handleTabChange}
               variant="fullWidth"
-              sx={{ borderBottom: 1, borderColor: 'divider' }}
+              sx={{
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                '& .MuiTab-root': {
+                  fontSize: '0.88rem',
+                  fontWeight: 500,
+                  color: 'rgba(250, 244, 232, 0.6)',
+                  '&.Mui-selected': { color: '#FF5B24' },
+                },
+                '& .MuiTabs-indicator': { backgroundColor: '#FF5B24' },
+              }}
             >
               <Tab label="Description" />
               <Tab label="Details" />
@@ -379,93 +417,46 @@ const ProductDetail: React.FC = () => {
               <Tab label="Shipping" />
             </Tabs>
             
-            <Box sx={{ px: 4 }}>
+            <Box sx={{ px: 3 }}>
               <TabPanel value={tabValue} index={0}>
-                <Typography variant="body1" paragraph sx={{ lineHeight: 1.8 }}>
+                <Typography variant="body2" paragraph sx={{ lineHeight: 1.7, color: 'rgba(250, 244, 232, 0.85)' }}>
                   {product.description}
                 </Typography>
-                <Typography variant="body1" paragraph sx={{ lineHeight: 1.8 }}>
-                  Experience the perfect blend of luxury and functionality with this premium product. 
-                  Crafted with attention to detail and using only the finest materials, this piece 
-                  exemplifies excellence in design and quality.
+                <Typography variant="body2" paragraph sx={{ lineHeight: 1.7, color: 'rgba(250, 244, 232, 0.7)' }}>
+                  Experience the perfect blend of luxury and functionality. Crafted with attention to detail and using clean materials, this formula exemplifies excellence in biotech R&D.
                 </Typography>
               </TabPanel>
               
               <TabPanel value={tabValue} index={1}>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="body2" color="text.secondary">Product ID:</Typography>
-                    <Typography variant="body1" paragraph>{product.id}</Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.5)' }}>Product ID:</Typography>
+                    <Typography variant="body2">{product.id}</Typography>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="body2" color="text.secondary">Category:</Typography>
-                    <Typography variant="body1" paragraph>{product.category}</Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="body2" color="text.secondary">Availability:</Typography>
-                    <Typography variant="body1" paragraph>
-                      {product.inventory > 0 ? 'In Stock' : 'Out of Stock'}
-                    </Typography>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
-                    <Typography variant="body2" color="text.secondary">Shipping:</Typography>
-                    <Typography variant="body1" paragraph>Free over $500</Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.5)' }}>Category:</Typography>
+                    <Typography variant="body2">{product.category}</Typography>
                   </Grid>
                 </Grid>
               </TabPanel>
               
               <TabPanel value={tabValue} index={2}>
-                <Typography variant="body1" paragraph>
+                <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>
                   No reviews yet. Be the first to review this product!
                 </Typography>
-                <Button variant="outlined">Write a Review</Button>
               </TabPanel>
               
               <TabPanel value={tabValue} index={3}>
-                <Typography variant="h6" gutterBottom>Shipping Information</Typography>
-                <Typography variant="body1" paragraph>
+                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>Shipping Information</Typography>
+                <Typography variant="body2" sx={{ lineHeight: 1.7, color: 'rgba(250, 244, 232, 0.8)' }}>
                   • Free shipping on orders over $500<br/>
-                  • Standard shipping: 5-7 business days<br/>
-                  • Express shipping: 2-3 business days<br/>
-                  • International shipping available<br/>
+                  • Standard delivery: 3-5 business days<br/>
                   • 30-day return policy
                 </Typography>
               </TabPanel>
             </Box>
           </Paper>
         </Box>
-
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <Box sx={{ mt: 6 }}>
-            <Typography variant="h4" gutterBottom>
-              Related Products
-            </Typography>
-            <Grid container spacing={3}>
-              {relatedProducts.map((relatedProduct) => (
-                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={relatedProduct.id}>
-                  <Card>
-                    <CardMedia
-                      component="img"
-                      height="200"
-                      image={relatedProduct.imageUrl}
-                      alt={relatedProduct.name}
-                    />
-                    <CardContent>
-                      <Typography variant="h6">{relatedProduct.name}</Typography>
-                      <Typography variant="h6" color="primary">
-                        ${(() => {
-                          const price = typeof relatedProduct.price === 'string' ? parseFloat(relatedProduct.price) : relatedProduct.price;
-                          return isNaN(price) || !isFinite(price) ? '0.00' : price.toFixed(2);
-                        })()}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        )}
       </Box>
       
       <Snackbar
@@ -474,7 +465,7 @@ const ProductDetail: React.FC = () => {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ borderRadius: '10px' }}>
           {quantity} {quantity === 1 ? 'item' : 'items'} added to cart
         </Alert>
       </Snackbar>

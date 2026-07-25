@@ -3,9 +3,15 @@ kind: Kustomization
 
 namespace: boutique
 
+# NOTE: secrets.yml is intentionally ABSENT from this list.
+# The boutique-secrets Secret is created out-of-band from .env by
+# ./scripts/bootstrap-secrets.sh so that no credential is ever committed.
+# See gitops/secrets.example.yml for the Sealed Secrets / External Secrets
+# migration path if you want ArgoCD to manage it natively.
 resources:
   - namespace.yml
-  - secrets.yml
+  - network-policies.yml
+  - k8s/config.yml
   - k8s/database/statefulset.yml
   - k8s/database/service.yml
   - k8s/backend/gateway.yml

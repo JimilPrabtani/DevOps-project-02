@@ -13,8 +13,8 @@ export interface Product {
   reviewCount?: number;
   isNew?: boolean;
   discountPercentage?: number;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   images?: ProductImage[];
 }
 
@@ -64,8 +64,13 @@ export interface Address {
 
 export interface AuthResponse {
   user: User;
+  /** Short-lived access token. Held in memory only — never persisted. */
   token: string;
-  refreshToken: string;
+  /** e.g. "15m" — informational, so the UI can pre-emptively refresh. */
+  expiresIn?: string;
+  // NOTE: there is deliberately no refreshToken field. The refresh token is
+  // delivered as an httpOnly cookie that JavaScript cannot read, so an XSS
+  // cannot steal it.
 }
 
 export interface LoginCredentials {

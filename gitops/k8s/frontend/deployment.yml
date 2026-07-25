@@ -3,8 +3,10 @@ kind: Deployment
 metadata:
   name: frontend
   namespace: boutique
+  labels:
+    app: frontend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: frontend
@@ -13,26 +15,76 @@ spec:
       labels:
         app: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101 # nginx user in the nginx:alpine image
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      automountServiceAccountToken: false
       containers:
         - name: frontend
           image: 123209654419.dkr.ecr.us-east-1.amazonaws.com/frontend:6070b4fdb4c98fe92df77f37683c82ab6c8a758f
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3000
-          env:
-            - name: REACT_APP_API_URL
-              value: "http://gateway:3001/api"
+            - name: http
+              containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          # nginx needs writable scratch space when the root filesystem is
+          # read-only.
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+            - name: nginx-run
+              mountPath: /var/run
+            - name: tmp
+              mountPath: /tmp
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+        - name: nginx-run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend
   namespace: boutique
+  labels:
+    app: frontend
 spec:
   selector:
     app: frontend
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 3000
-      targetPort: 3000
+      targetPort: http
   type: ClusterIP
-

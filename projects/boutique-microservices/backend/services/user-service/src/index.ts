@@ -2,35 +2,62 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import * as dotenv from 'dotenv';
+
+dotenv.config();
+
+import { config } from './config/env';
 import { userRoutes } from './routes/users';
 import { connectDB } from './database/connection';
 import { metricsMiddleware, setupMetrics } from './metrics';
 
-dotenv.config({ path: './.env' });
-
 const app = express();
-const PORT = process.env.PORT || 3006;
+
+app.set('trust proxy', 1);
 
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (config.cors.allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: '16kb' }));
 
 setupMetrics(app, { serviceName: 'user-service', serviceVersion: '1.0.0' });
-
 app.use(metricsMiddleware);
+
+app.get('/healthz', (_req, res) => res.json({ status: 'ok' }));
 
 app.use('', userRoutes);
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
+app.use((_req, res) => {
+  res.status(404).json({ success: false, error: 'Not found' });
 });
+
+app.use(
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    console.error('[user-service] unhandled error:', err);
+    if (res.headersSent) return;
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+);
 
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => {
-      console.log(`User service running on port ${PORT}`);
+    app.listen(config.port, () => {
+      console.log(
+        `User service listening on port ${config.port} [${config.nodeEnv}]`
+      );
     });
   } catch (error) {
     console.error('Failed to start user service:', error);

@@ -46,35 +46,34 @@ const SearchBar: React.FC<SearchBarProps> = ({
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <SearchIcon color="action" />
+              <SearchIcon sx={{ color: 'rgba(250, 244, 232, 0.4)', fontSize: '1.2rem' }} />
             </InputAdornment>
           ),
           endAdornment: query && (
             <InputAdornment position="end">
-              <IconButton onClick={handleClear} size="small">
-                <ClearIcon />
+              <IconButton onClick={handleClear} size="small" sx={{ color: 'rgba(250, 244, 232, 0.5)' }}>
+                <ClearIcon sx={{ fontSize: '1rem' }} />
               </IconButton>
             </InputAdornment>
           ),
           sx: {
-            backgroundColor: 'background.paper',
-            borderRadius: 2,
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: 'divider',
-              },
-              '&:hover fieldset': {
-                borderColor: 'primary.main',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'primary.main',
-              },
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: '999px',
+            px: 1,
+            py: 0.25,
+            color: '#FAF4E8',
+            fontSize: '0.92rem',
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'rgba(255, 255, 255, 0.1)',
             },
-          },
-        }}
-        sx={{
-          '& .MuiInputLabel-root': {
-            fontSize: '1.1rem',
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: 'rgba(255, 255, 255, 0.25)',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#FF5B24',
+              borderWidth: '1px',
+            },
           },
         }}
       />
@@ -104,7 +103,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   size="small"
                   label={option}
                   {...getTagProps({ index })}
-                  sx={{ mr: 0.5, mb: 0.5 }}
+                  sx={{ mr: 0.5, mb: 0.5, borderRadius: '999px', fontSize: '0.75rem' }}
                 />
               ))
             }

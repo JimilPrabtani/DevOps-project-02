@@ -6,25 +6,48 @@ metadata:
 spec:
   backoffLimit: 3
   template:
+    metadata:
+      labels:
+        job-name: boutique-db-restore
     spec:
       restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      automountServiceAccountToken: false
       containers:
         - name: restore
           image: postgres:15-alpine
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           command:
             - sh
             - -c
             - |
+              set -e
               echo "Waiting for Postgres..."
-              until pg_isready -h boutique-postgres -U postgres; do
+              until pg_isready -h boutique-postgres -U "$POSTGRES_USER"; do
                 sleep 2
               done
 
               echo "Restoring dump..."
-              psql -h boutique-postgres -U postgres -f /dump/boutique_full.sql
+              psql -h boutique-postgres -U "$POSTGRES_USER" -f /dump/boutique_full.sql
 
               echo "Creating auth_db schema..."
-              psql -h boutique-postgres -U postgres -d auth_db -c "
+              psql -h boutique-postgres -U "$POSTGRES_USER" -d auth_db -c "
               CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 email VARCHAR(255) UNIQUE NOT NULL,
@@ -34,10 +57,21 @@ spec:
                 role VARCHAR(50) DEFAULT 'customer',
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
-              );"
+              );
+              -- Refresh token registry. Added during the security remediation
+              -- so that logout and token rotation can actually revoke a session.
+              CREATE TABLE IF NOT EXISTS refresh_tokens (
+                jti UUID PRIMARY KEY,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                issued_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                expires_at TIMESTAMP NOT NULL,
+                revoked_at TIMESTAMP
+              );
+              CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+              CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);"
 
               echo "Creating orders_db schema..."
-              psql -h boutique-postgres -U postgres -d orders_db -c "
+              psql -h boutique-postgres -U "$POSTGRES_USER" -d orders_db -c "
               CREATE TABLE IF NOT EXISTS orders (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id VARCHAR(255) NOT NULL,
@@ -48,6 +82,7 @@ spec:
                 created_at TIMESTAMP DEFAULT NOW(),
                 updated_at TIMESTAMP DEFAULT NOW()
               );
+              CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
               CREATE TABLE IF NOT EXISTS order_items (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
@@ -55,10 +90,18 @@ spec:
                 quantity INTEGER NOT NULL,
                 price DECIMAL(10,2) NOT NULL,
                 created_at TIMESTAMP DEFAULT NOW()
-              );"
+              );
+              CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);"
 
               echo "Restore completed."
           env:
+            # Credentials come from the Secret; the username is no longer
+            # hardcoded as "postgres" in the manifest.
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: boutique-secrets
+                  key: POSTGRES_USER
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
@@ -67,7 +110,11 @@ spec:
           volumeMounts:
             - name: dump
               mountPath: /dump
+            - name: tmp
+              mountPath: /tmp
       volumes:
         - name: dump
           configMap:
             name: boutique-db-dump
+        - name: tmp
+          emptyDir: {}

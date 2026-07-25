@@ -24,9 +24,10 @@ import {
   Email as EmailIcon,
   Lock as LockIcon,
 } from '@mui/icons-material';
-import { authService } from '../../services/authService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Register: React.FC = () => {
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -43,7 +44,7 @@ const Register: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const navigate = useNavigate();
 
-  const steps = ['Personal Information', 'Account Details', 'Preferences'];
+  const steps = ['Personal Info', 'Account Details', 'Preferences'];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -56,7 +57,6 @@ const Register: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    // Validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all required fields');
       return;
@@ -67,8 +67,8 @@ const Register: React.FC = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (formData.password.length < 12) {
+      setError('Password must be at least 12 characters long');
       return;
     }
 
@@ -80,16 +80,18 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      await authService.register({
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-      });
+      await register(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      );
 
-      navigate('/login');
+      navigate('/shop');
     } catch (error: any) {
-      setError(error.response?.data?.error || error.response?.data?.message || 'Registration failed');
+      const data = error?.response?.data;
+      const fieldErrors = data?.fields ? Object.values(data.fields).join(' ') : null;
+      setError(fieldErrors || data?.error || data?.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -108,8 +110,8 @@ const Register: React.FC = () => {
       setError('Passwords do not match');
       return;
     }
-    if (activeStep === 1 && formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (activeStep === 1 && formData.password.length < 12) {
+      setError('Password must be at least 12 characters long');
       return;
     }
     setError('');
@@ -125,12 +127,12 @@ const Register: React.FC = () => {
     switch (step) {
       case 0:
         return (
-          <Grid container spacing={3}>
+          <Grid container spacing={2.5}>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="h5" gutterBottom>
+              <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
                 Personal Information
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)', mb: 1 }}>
                 Tell us a bit about yourself
               </Typography>
             </Grid>
@@ -147,7 +149,7 @@ const Register: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <PersonIcon color="action" />
+                      <PersonIcon sx={{ color: 'rgba(250, 244, 232, 0.4)', fontSize: '1.1rem' }} />
                     </InputAdornment>
                   ),
                 }}
@@ -166,7 +168,7 @@ const Register: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <PersonIcon color="action" />
+                      <PersonIcon sx={{ color: 'rgba(250, 244, 232, 0.4)', fontSize: '1.1rem' }} />
                     </InputAdornment>
                   ),
                 }}
@@ -176,12 +178,12 @@ const Register: React.FC = () => {
         );
       case 1:
         return (
-          <Grid container spacing={3}>
+          <Grid container spacing={2.5}>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="h5" gutterBottom>
+              <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
                 Account Details
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)', mb: 1 }}>
                 Create your login credentials
               </Typography>
             </Grid>
@@ -198,7 +200,7 @@ const Register: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <EmailIcon color="action" />
+                      <EmailIcon sx={{ color: 'rgba(250, 244, 232, 0.4)', fontSize: '1.1rem' }} />
                     </InputAdornment>
                   ),
                 }}
@@ -209,7 +211,7 @@ const Register: React.FC = () => {
                 required
                 fullWidth
                 name="password"
-                label="Password"
+                label="Password (min. 12 chars)"
                 type={showPassword ? 'text' : 'password'}
                 id="password"
                 autoComplete="new-password"
@@ -218,7 +220,7 @@ const Register: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockIcon color="action" />
+                      <LockIcon sx={{ color: 'rgba(250, 244, 232, 0.4)', fontSize: '1.1rem' }} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -227,8 +229,9 @@ const Register: React.FC = () => {
                         aria-label="toggle password visibility"
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
+                        sx={{ color: 'rgba(250, 244, 232, 0.5)' }}
                       >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                        {showPassword ? <VisibilityOff sx={{ fontSize: '1.1rem' }} /> : <Visibility sx={{ fontSize: '1.1rem' }} />}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -248,7 +251,7 @@ const Register: React.FC = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <LockIcon color="action" />
+                      <LockIcon sx={{ color: 'rgba(250, 244, 232, 0.4)', fontSize: '1.1rem' }} />
                     </InputAdornment>
                   ),
                   endAdornment: (
@@ -257,8 +260,9 @@ const Register: React.FC = () => {
                         aria-label="toggle confirm password visibility"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         edge="end"
+                        sx={{ color: 'rgba(250, 244, 232, 0.5)' }}
                       >
-                        {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        {showConfirmPassword ? <VisibilityOff sx={{ fontSize: '1.1rem' }} /> : <Visibility sx={{ fontSize: '1.1rem' }} />}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -269,12 +273,12 @@ const Register: React.FC = () => {
         );
       case 2:
         return (
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             <Grid size={{ xs: 12 }}>
-              <Typography variant="h5" gutterBottom>
+              <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
                 Preferences
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)', mb: 1 }}>
                 Customize your experience
               </Typography>
             </Grid>
@@ -285,17 +289,17 @@ const Register: React.FC = () => {
                     checked={formData.agreeToTerms}
                     onChange={(e) => setFormData({ ...formData, agreeToTerms: e.target.checked })}
                     name="agreeToTerms"
-                    color="primary"
+                    sx={{ color: 'rgba(255, 255, 255, 0.3)', '&.Mui-checked': { color: '#FF5B24' } }}
                   />
                 }
                 label={
-                  <Typography variant="body2">
+                  <Typography variant="body2" sx={{ fontSize: '0.82rem', color: 'rgba(250, 244, 232, 0.8)' }}>
                     I agree to the{' '}
-                    <Link to="/terms" color="primary">
+                    <Link to="/terms" style={{ color: '#FF5B24' }}>
                       Terms and Conditions
                     </Link>{' '}
                     and{' '}
-                    <Link to="/privacy" color="primary">
+                    <Link to="/privacy" style={{ color: '#FF5B24' }}>
                       Privacy Policy
                     </Link>
                   </Typography>
@@ -309,10 +313,14 @@ const Register: React.FC = () => {
                     checked={formData.subscribeNewsletter}
                     onChange={(e) => setFormData({ ...formData, subscribeNewsletter: e.target.checked })}
                     name="subscribeNewsletter"
-                    color="primary"
+                    sx={{ color: 'rgba(255, 255, 255, 0.3)', '&.Mui-checked': { color: '#FF5B24' } }}
                   />
                 }
-                label="Subscribe to our newsletter for exclusive offers and new arrivals"
+                label={
+                  <Typography variant="body2" sx={{ fontSize: '0.82rem', color: 'rgba(250, 244, 232, 0.8)' }}>
+                    Subscribe to our newsletter for exclusive offers and new releases
+                  </Typography>
+                }
               />
             </Grid>
           </Grid>
@@ -329,34 +337,48 @@ const Register: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          minHeight: '100vh',
+          minHeight: '85vh',
           justifyContent: 'center',
           py: 4,
         }}
       >
         <Paper
-          elevation={6}
+          elevation={0}
           sx={{
             p: { xs: 3, sm: 4 },
             width: '100%',
-            borderRadius: 3,
+            borderRadius: '20px',
+            backgroundColor: 'rgba(28, 21, 40, 0.75)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
           }}
         >
-          <Box sx={{ mb: 4, textAlign: 'center' }}>
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
             <Typography
               component="h1"
               variant="h3"
               gutterBottom
-              sx={{ fontFamily: '"Playfair Display", serif', fontWeight: 700 }}
+              sx={{ fontWeight: 700, fontSize: '1.75rem' }}
             >
               Create Account
             </Typography>
-            <Typography variant="h6" color="text.secondary">
-              Join our exclusive community of luxury shoppers
+            <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)' }}>
+              Join our community for clean biotech protection
             </Typography>
           </Box>
 
-          <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+          <Stepper
+            activeStep={activeStep}
+            sx={{
+              mb: 3.5,
+              '& .MuiStepLabel-label': { fontSize: '0.78rem', color: 'rgba(250, 244, 232, 0.5)' },
+              '& .MuiStepLabel-label.Mui-active': { color: '#FF5B24', fontWeight: 600 },
+              '& .MuiStepIcon-root': { color: 'rgba(255, 255, 255, 0.12)' },
+              '& .MuiStepIcon-root.Mui-active': { color: '#FF5B24' },
+              '& .MuiStepIcon-root.Mui-completed': { color: '#5EEAD4' },
+            }}
+          >
             {steps.map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -365,7 +387,7 @@ const Register: React.FC = () => {
           </Stepper>
           
           {error && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: 2.5, borderRadius: '10px' }}>
               {error}
             </Alert>
           )}
@@ -373,11 +395,14 @@ const Register: React.FC = () => {
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             {renderStepContent(activeStep)}
             
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3.5 }}>
               <Button
                 disabled={activeStep === 0}
                 onClick={handleBack}
-                sx={{ visibility: activeStep === 0 ? 'hidden' : 'visible' }}
+                sx={{
+                  visibility: activeStep === 0 ? 'hidden' : 'visible',
+                  borderRadius: '10px',
+                }}
               >
                 Back
               </Button>
@@ -386,22 +411,23 @@ const Register: React.FC = () => {
                 <Button
                   type="submit"
                   variant="contained"
-                  color="secondary"
                   disabled={loading || !formData.agreeToTerms}
                   sx={{
-                    px: 4,
-                    py: 1.5,
+                    px: 3.5,
+                    py: 1,
+                    borderRadius: '12px',
                   }}
                 >
-                  {loading ? 'Creating Account...' : 'Create Account'}
+                  {loading ? 'Creating...' : 'Create Account'}
                 </Button>
               ) : (
                 <Button
                   variant="contained"
                   onClick={handleNext}
                   sx={{
-                    px: 4,
-                    py: 1.5,
+                    px: 3.5,
+                    py: 1,
+                    borderRadius: '12px',
                   }}
                 >
                   Next
@@ -410,10 +436,10 @@ const Register: React.FC = () => {
             </Box>
           </Box>
           
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
+          <Box sx={{ textAlign: 'center', mt: 3.5 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)' }}>
               Already have an account?{' '}
-              <Link to="/login" color="primary">
+              <Link to="/login" style={{ color: '#FF5B24', textDecoration: 'none', fontWeight: 500 }}>
                 Sign In
               </Link>
             </Typography>

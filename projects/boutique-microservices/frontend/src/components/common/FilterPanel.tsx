@@ -6,7 +6,6 @@ import {
   Typography,
   Slider,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Checkbox,
@@ -134,65 +133,97 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     filters.inStock,
   ].filter(Boolean).length + (filters.priceRange[0] > 0 || filters.priceRange[1] < maxPrice ? 1 : 0);
 
+  const accordionSx = {
+    backgroundColor: 'transparent',
+    backgroundImage: 'none',
+    boxShadow: 'none',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+    '&:before': { display: 'none' },
+    '&.Mui-expanded': { margin: 0 },
+  };
+
   return (
-    <Card sx={{ height: 'fit-content', position: 'sticky', top: 24 }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+    <Card sx={{ height: 'fit-content', position: 'sticky', top: 88, borderRadius: '16px' }}>
+      <CardContent sx={{ p: 2.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FilterIcon />
-            <Typography variant="h6">Filters</Typography>
+            <FilterIcon sx={{ fontSize: '1.1rem', color: '#FF5B24' }} />
+            <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>Filters</Typography>
             {activeFilterCount > 0 && (
               <Chip
                 label={activeFilterCount}
                 size="small"
-                color="primary"
-                sx={{ ml: 1 }}
+                sx={{
+                  backgroundColor: 'rgba(255, 91, 36, 0.2)',
+                  color: '#FF5B24',
+                  fontSize: '0.72rem',
+                  height: 20,
+                }}
               />
             )}
           </Box>
           {activeFilterCount > 0 && (
             <Button
-              startIcon={<ClearIcon />}
+              startIcon={<ClearIcon sx={{ fontSize: '0.85rem' }} />}
               onClick={clearFilters}
               size="small"
+              sx={{ color: 'rgba(250, 244, 232, 0.6)', fontSize: '0.78rem', p: '2px 8px' }}
             >
               Clear
             </Button>
           )}
         </Box>
 
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Price Range</Typography>
+        <Accordion defaultExpanded sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(250, 244, 232, 0.5)', fontSize: '1.1rem' }} />}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, fontSize: '0.88rem' }}>Price Range</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ px: 2, pt: 2 }}>
-              <Typography variant="body2" gutterBottom>
-                ${filters.priceRange[0]} - ${filters.priceRange[1]}
-              </Typography>
-              <Slider
-                value={filters.priceRange}
-                onChange={handlePriceRangeChange}
-                valueLabelDisplay="auto"
-                min={0}
-                max={maxPrice}
-                step={50}
-                sx={{ mt: 2 }}
-              />
-            </Box>
+          <AccordionDetails sx={{ px: 1, pb: 2 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(214, 200, 180, 0.7)' }}>
+              ${filters.priceRange[0]} — ${filters.priceRange[1]}
+            </Typography>
+            <Slider
+              value={filters.priceRange}
+              onChange={handlePriceRangeChange}
+              valueLabelDisplay="auto"
+              min={0}
+              max={maxPrice}
+              step={50}
+              sx={{
+                mt: 1.5,
+                color: '#FF5B24',
+                '& .MuiSlider-thumb': {
+                  width: 16,
+                  height: 16,
+                  backgroundColor: '#FAF4E8',
+                },
+                '& .MuiSlider-track': {
+                  border: 'none',
+                },
+                '& .MuiSlider-rail': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                },
+              }}
+            />
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Category</Typography>
+        <Accordion sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(250, 244, 232, 0.5)', fontSize: '1.1rem' }} />}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, fontSize: '0.88rem' }}>Category</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <FormControl fullWidth>
+          <AccordionDetails sx={{ px: 1 }}>
+            <FormControl fullWidth size="small">
               <Select
                 value={filters.category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 displayEmpty
+                sx={{
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                  fontSize: '0.85rem',
+                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                }}
               >
                 <MenuItem value="">All Categories</MenuItem>
                 {categories.map((category) => (
@@ -205,12 +236,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Brand</Typography>
+        <Accordion sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(250, 244, 232, 0.5)', fontSize: '1.1rem' }} />}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, fontSize: '0.88rem' }}>Brand</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <AccordionDetails sx={{ px: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               {brands.map((brand) => (
                 <FormControlLabel
                   key={brand}
@@ -219,61 +250,74 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                       checked={filters.brand.includes(brand)}
                       onChange={() => handleBrandToggle(brand)}
                       size="small"
+                      sx={{ color: 'rgba(255, 255, 255, 0.3)', '&.Mui-checked': { color: '#FF5B24' } }}
                     />
                   }
-                  label={brand}
+                  label={<Typography variant="body2" sx={{ fontSize: '0.82rem', color: 'rgba(250, 244, 232, 0.8)' }}>{brand}</Typography>}
                 />
               ))}
             </Box>
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Size</Typography>
+        <Accordion sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(250, 244, 232, 0.5)', fontSize: '1.1rem' }} />}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, fontSize: '0.88rem' }}>Size</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <AccordionDetails sx={{ px: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
               {sizes.map((size) => (
                 <Chip
                   key={size}
                   label={size}
                   clickable
-                  color={filters.size.includes(size) ? 'primary' : 'default'}
                   onClick={() => handleSizeToggle(size)}
                   size="small"
+                  sx={{
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    backgroundColor: filters.size.includes(size) ? 'rgba(255, 91, 36, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                    color: filters.size.includes(size) ? '#FF5B24' : 'rgba(250, 244, 232, 0.7)',
+                    border: filters.size.includes(size) ? '1px solid rgba(255, 91, 36, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
                 />
               ))}
             </Box>
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Color</Typography>
+        <Accordion sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(250, 244, 232, 0.5)', fontSize: '1.1rem' }} />}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, fontSize: '0.88rem' }}>Color</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <AccordionDetails sx={{ px: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
               {colors.map((color) => (
                 <Chip
                   key={color}
                   label={color}
                   clickable
-                  color={filters.color.includes(color) ? 'primary' : 'default'}
                   onClick={() => handleColorToggle(color)}
                   size="small"
+                  sx={{
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    backgroundColor: filters.color.includes(color) ? 'rgba(255, 91, 36, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                    color: filters.color.includes(color) ? '#FF5B24' : 'rgba(250, 244, 232, 0.7)',
+                    border: filters.color.includes(color) ? '1px solid rgba(255, 91, 36, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                  }}
                 />
               ))}
             </Box>
           </AccordionDetails>
         </Accordion>
 
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Rating</Typography>
+        <Accordion sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(250, 244, 232, 0.5)', fontSize: '1.1rem' }} />}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 500, fontSize: '0.88rem' }}>Rating</Typography>
           </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <AccordionDetails sx={{ px: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               {[4, 3, 2, 1].map((rating) => (
                 <FormControlLabel
                   key={rating}
@@ -282,25 +326,27 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
                       checked={filters.rating === rating}
                       onChange={() => handleRatingChange(filters.rating === rating ? 0 : rating)}
                       size="small"
+                      sx={{ color: 'rgba(255, 255, 255, 0.3)', '&.Mui-checked': { color: '#FF5B24' } }}
                     />
                   }
-                  label={`${rating} Stars & Up`}
+                  label={<Typography variant="body2" sx={{ fontSize: '0.82rem', color: 'rgba(250, 244, 232, 0.8)' }}>{rating} Stars & Up</Typography>}
                 />
               ))}
             </Box>
           </AccordionDetails>
         </Accordion>
 
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 2, pt: 1, borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
           <FormControlLabel
             control={
               <Checkbox
                 checked={filters.inStock}
                 onChange={handleInStockToggle}
                 size="small"
+                sx={{ color: 'rgba(255, 255, 255, 0.3)', '&.Mui-checked': { color: '#FF5B24' } }}
               />
             }
-            label="In Stock Only"
+            label={<Typography variant="body2" sx={{ fontSize: '0.82rem', color: 'rgba(250, 244, 232, 0.8)' }}>In Stock Only</Typography>}
           />
         </Box>
       </CardContent>

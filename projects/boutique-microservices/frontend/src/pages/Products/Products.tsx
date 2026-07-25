@@ -3,18 +3,11 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
   Button,
-  TextField,
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   Box,
-  Chip,
   Drawer,
   useMediaQuery,
   IconButton,
@@ -23,7 +16,6 @@ import {
 import {
   FilterList as FilterIcon,
   Close as CloseIcon,
-  Sort as SortIcon,
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
 } from '@mui/icons-material';
@@ -84,7 +76,7 @@ const Products: React.FC = () => {
       console.log('[Products] Starting to load products...');
       try {
         const allProducts = await productService.getAll();
-        console.log('[Products] Products loaded:', allProducts.length, allProducts);
+        console.log('[Products] Products loaded:', allProducts.length);
         setProducts(allProducts);
         setFilteredProducts(allProducts);
       } catch (error) {
@@ -108,7 +100,6 @@ const Products: React.FC = () => {
       );
     }
 
-    // Apply sorting
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
@@ -130,7 +121,6 @@ const Products: React.FC = () => {
   const handleFilterChange = (filters: any) => {
     let filtered = products;
 
-    // Apply filters
     if (filters.priceRange) {
       filtered = filtered.filter(product => 
         product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
@@ -151,7 +141,6 @@ const Products: React.FC = () => {
       filtered = filtered.filter(product => product.inventory > 0);
     }
 
-    // Apply search query
     if (searchQuery) {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -160,7 +149,6 @@ const Products: React.FC = () => {
       );
     }
 
-    // Apply sorting
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
@@ -194,30 +182,34 @@ const Products: React.FC = () => {
   const mainContent = (
     <Box sx={{ flexGrow: 1 }}>
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h2" component="h1" sx={{ fontWeight: 700, mb: 0.5 }}>
           All Products
         </Typography>
-        <Typography variant="h6" color="text.secondary">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'Product' : 'Products'} Found
+        <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)' }}>
+          {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} available
         </Typography>
       </Box>
 
       {/* Search and Controls */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Box sx={{ flexGrow: 1, minWidth: 300 }}>
+      <Box sx={{ mb: 3.5, display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Box sx={{ flexGrow: 1, minWidth: 260 }}>
           <SearchBar
             onSearch={setSearchQuery}
             placeholder="Search luxury products..."
           />
         </Box>
         
-        <FormControl sx={{ minWidth: 150 }}>
-          <InputLabel>Sort By</InputLabel>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
           <Select
             value={sortBy}
-            label="Sort By"
             onChange={(e) => setSortBy(e.target.value)}
+            sx={{
+              borderRadius: '999px',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              fontSize: '0.85rem',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+            }}
           >
             <MenuItem value="featured">Featured</MenuItem>
             <MenuItem value="price-low">Price: Low to High</MenuItem>
@@ -227,26 +219,30 @@ const Products: React.FC = () => {
           </Select>
         </FormControl>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 0.5, backgroundColor: 'rgba(255, 255, 255, 0.05)', p: 0.5, borderRadius: '10px' }}>
           <IconButton
+            size="small"
             onClick={() => setViewMode('grid')}
-            color={viewMode === 'grid' ? 'primary' : 'default'}
+            sx={{ color: viewMode === 'grid' ? '#FF5B24' : 'rgba(250, 244, 232, 0.5)' }}
           >
-            <ViewModuleIcon />
+            <ViewModuleIcon sx={{ fontSize: '1.1rem' }} />
           </IconButton>
           <IconButton
+            size="small"
             onClick={() => setViewMode('list')}
-            color={viewMode === 'list' ? 'primary' : 'default'}
+            sx={{ color: viewMode === 'list' ? '#FF5B24' : 'rgba(250, 244, 232, 0.5)' }}
           >
-            <ViewListIcon />
+            <ViewListIcon sx={{ fontSize: '1.1rem' }} />
           </IconButton>
         </Box>
 
-        {!isMobile && (
+        {isMobile && (
           <Button
             variant="outlined"
-            startIcon={<FilterIcon />}
+            size="small"
+            startIcon={<FilterIcon sx={{ fontSize: '1rem' }} />}
             onClick={() => setFilterDrawerOpen(true)}
+            sx={{ borderRadius: '999px' }}
           >
             Filters
           </Button>
@@ -254,7 +250,7 @@ const Products: React.FC = () => {
       </Box>
 
       {/* Products Grid */}
-      <Grid container spacing={viewMode === 'list' ? 2 : 4}>
+      <Grid container spacing={viewMode === 'list' ? 2 : 3}>
         {filteredProducts.map((product) => (
           <Grid 
             size={{
@@ -276,13 +272,18 @@ const Products: React.FC = () => {
 
       {filteredProducts.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
             No products found matching your criteria.
           </Typography>
-          <Button variant="outlined" onClick={() => {
-            setSearchQuery('');
-            setSortBy('featured');
-          }}>
+          <Button
+            variant="outlined"
+            size="small"
+            sx={{ mt: 1, borderRadius: '10px' }}
+            onClick={() => {
+              setSearchQuery('');
+              setSortBy('featured');
+            }}
+          >
             Clear Filters
           </Button>
         </Box>
@@ -292,8 +293,8 @@ const Products: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Grid container spacing={4}>
+      <Box sx={{ py: 3 }}>
+        <Grid container spacing={3.5}>
           {/* Filter Sidebar for Desktop */}
           {!isMobile && (
             <Grid size={{ xs: 12, md: 3 }}>
@@ -309,7 +310,7 @@ const Products: React.FC = () => {
           )}
           
           {/* Main Content */}
-          <Grid size={{ xs: 12, md: 9 }}>
+          <Grid size={{ xs: 12, md: isMobile ? 12 : 9 }}>
             {mainContent}
           </Grid>
         </Grid>
@@ -320,12 +321,12 @@ const Products: React.FC = () => {
         anchor="left"
         open={filterDrawerOpen}
         onClose={() => setFilterDrawerOpen(false)}
-        sx={{ '& .MuiDrawer-paper': { width: 300 } }}
+        sx={{ '& .MuiDrawer-paper': { width: 300, backgroundColor: '#17101F' } }}
       >
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h6">Filters</Typography>
-          <IconButton onClick={() => setFilterDrawerOpen(false)}>
-            <CloseIcon />
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>Filters</Typography>
+          <IconButton onClick={() => setFilterDrawerOpen(false)} size="small">
+            <CloseIcon sx={{ fontSize: '1.1rem' }} />
           </IconButton>
         </Box>
         <FilterPanel
@@ -345,7 +346,8 @@ const Products: React.FC = () => {
       {isMobile && (
         <Fab
           color="primary"
-          sx={{ position: 'fixed', bottom: 16, right: 16 }}
+          size="medium"
+          sx={{ position: 'fixed', bottom: 20, right: 20, boxShadow: '0 4px 14px rgba(255, 91, 36, 0.4)' }}
           onClick={() => setFilterDrawerOpen(true)}
         >
           <FilterIcon />

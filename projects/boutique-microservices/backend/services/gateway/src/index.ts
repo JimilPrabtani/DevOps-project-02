@@ -1,63 +1,179 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import dotenv from 'dotenv';
-import { metricsMiddleware, setupMetrics } from './metrics';
 
 dotenv.config();
 
-const app = express();
-const PORT: number = Number(process.env.GATEWAY_PORT) || 3001;
+// Imported after dotenv so validation sees loaded values; throws on boot if
+// JWT_ACCESS_SECRET or any service URL is missing.
+import { config } from './config/env';
+import { metricsMiddleware, setupMetrics } from './metrics';
+import {
+  requireAuth,
+  optionalAuth,
+  requireRole,
+  stripClientIdentityHeaders,
+} from './middleware/auth';
 
-app.use(helmet());
-app.use(cors());
+const app = express();
+
+app.set('trust proxy', 1);
+
+app.use(
+  helmet({
+    // The gateway serves JSON only; a restrictive CSP costs nothing here.
+    contentSecurityPolicy: {
+      directives: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
+    },
+    hsts: config.isProduction
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
+  })
+);
+
+// Explicit origin allowlist. Previously `cors()` with no options replied
+// `Access-Control-Allow-Origin: *`, letting any website on the internet call
+// this API from a logged-in user's browser.
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (config.cors.allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+
+// MUST run before any route: removes client-supplied identity headers so they
+// cannot be spoofed. Only the gateway may set x-user-*.
+app.use(stripClientIdentityHeaders);
 
 setupMetrics(app, { serviceName: 'gateway', serviceVersion: '1.0.0' });
-
 app.use(metricsMiddleware);
 
-const services = {
-  auth: process.env.AUTH_SERVICE_URL || 'http://localhost:3002',
-  products: process.env.PRODUCTS_SERVICE_URL || 'http://localhost:3003',
-  orders: process.env.ORDERS_SERVICE_URL || 'http://localhost:3004',
-  users: process.env.USERS_SERVICE_URL || 'http://localhost:3005',
+const globalLimiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down.' },
+});
+
+const authLimiter = rateLimit({
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.authMax,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // only failed attempts count toward the limit
+  message: { error: 'Too many authentication attempts. Please try again later.' },
+});
+
+app.use(globalLimiter);
+
+app.get('/healthz', (_req, res) => res.json({ status: 'ok' }));
+
+const proxyDefaults = {
+  changeOrigin: true,
+  xfwd: true,
+  proxyTimeout: 10_000,
+  timeout: 10_000,
+  onError(err: Error, _req: express.Request, res: any) {
+    console.error('[gateway] upstream error:', err.message);
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Upstream service unavailable' });
+    }
+  },
 };
 
-app.use('/api/auth', createProxyMiddleware({
-  target: services.auth,
-  changeOrigin: true,
-  pathRewrite: { '^/api/auth': '' },
-}));
+// ---------------------------------------------------------------------------
+// PUBLIC — no token required
+// ---------------------------------------------------------------------------
 
-app.use('/api/products', createProxyMiddleware({
-  target: services.products,
-  changeOrigin: true,
-  pathRewrite: { '^/api/products': '' },
-}));
+// Auth endpoints must stay public (you cannot present a token before you have
+// one). Rate limited aggressively instead.
+app.use(
+  '/api/auth',
+  authLimiter,
+  createProxyMiddleware({
+    ...proxyDefaults,
+    target: config.services.auth,
+    pathRewrite: { '^/api/auth': '' },
+  })
+);
 
-app.use('/api/orders', createProxyMiddleware({
-  target: services.orders,
-  changeOrigin: true,
-  pathRewrite: { '^/api/orders': '' },
-}));
+// Product browsing is public, but identity is attached when available so the
+// catalogue can personalise later without another round trip.
+app.use(
+  '/api/products',
+  optionalAuth,
+  createProxyMiddleware({
+    ...proxyDefaults,
+    target: config.services.products,
+    pathRewrite: { '^/api/products': '' },
+  })
+);
 
-app.use('/api/users', createProxyMiddleware({
-  target: services.users,
-  changeOrigin: true,
-  pathRewrite: { '^/api/users': '' },
-}));
+// ---------------------------------------------------------------------------
+// PROTECTED — a valid access token is mandatory
+// ---------------------------------------------------------------------------
 
-app.use((req, res) => {
-  res.status(404).json({ error: 'Service not found' });
+// Order status changes are an operator action, not a customer one. Previously
+// ANY unauthenticated caller could mark ANY order as shipped.
+app.patch(
+  '/api/orders/:id/status',
+  requireAuth,
+  requireRole('admin'),
+  createProxyMiddleware({
+    ...proxyDefaults,
+    target: config.services.orders,
+    pathRewrite: { '^/api/orders': '' },
+  })
+);
+
+app.use(
+  '/api/orders',
+  requireAuth,
+  createProxyMiddleware({
+    ...proxyDefaults,
+    target: config.services.orders,
+    pathRewrite: { '^/api/orders': '' },
+  })
+);
+
+app.use(
+  '/api/users',
+  requireAuth,
+  createProxyMiddleware({
+    ...proxyDefaults,
+    target: config.services.users,
+    pathRewrite: { '^/api/users': '' },
+  })
+);
+
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
 });
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
-});
+app.use(
+  (
+    err: any,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction
+  ) => {
+    console.error('[gateway] unhandled error:', err);
+    if (res.headersSent) return;
+    res.status(500).json({ error: 'Internal server error' });
+  }
+);
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`API Gateway running on port ${PORT}`);
-  console.log(`Proxying to services:`, services);
+app.listen(config.port, '0.0.0.0', () => {
+  console.log(`API Gateway listening on port ${config.port} [${config.nodeEnv}]`);
+  console.log('Upstreams:', config.services);
 });

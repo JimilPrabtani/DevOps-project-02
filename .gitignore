@@ -22,15 +22,53 @@ Thumbs.db
 *.tfstate
 *.tfstate.*
 .terraform/
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
 
 # Kubernetes
 *.kubeconfig
+kubeconfig
+
+# Rendered secrets — never commit these.
+# secrets.yml previously held a live DB password in plaintext; it is now
+# generated at deploy time by ./scripts/bootstrap-secrets.sh.
+gitops/secrets.yml
+gitops/**/secret.yml
+gitops/**/secrets.yml
+!gitops/secrets.example.yml
+*sealed-secret*.yaml.tmp
 
 # Docker
 .dockerignore
 
 # Logs
 *.log
+npm-debug.log*
+yarn-error.log*
 
-# Environment variables
+# Node
+node_modules/
+
+# Compiled output — was previously committed, which meant stale JS containing
+# the old vulnerable auth logic shipped alongside the fixed TypeScript source.
+dist/
+build/
+!frontend/build/
+
+# Environment variables — all forms
 .env
+.env.*
+!.env.example
+!.env.*.example
+
+# Credentials / keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+credentials
+.aws/

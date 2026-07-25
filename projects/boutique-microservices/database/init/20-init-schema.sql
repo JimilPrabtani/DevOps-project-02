@@ -1,5 +1,9 @@
--- Database initialization script for Boutique Microservices
--- This file will be executed when PostgreSQL container starts
+-- =============================================================================
+-- Boutique Microservices — local schema initialisation
+--
+-- Runs once, on first boot, against an empty data volume.
+-- Reset with: docker compose down -v && docker compose up -d
+-- =============================================================================
 
 -- ============================================================
 -- AUTH DB
@@ -19,9 +23,28 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES
-('admin@boutique.com', '$2a$10$placeholder_hash', 'Admin', 'User', 'admin'),
-('customer@boutique.com', '$2a$10$placeholder_hash', 'John', 'Doe', 'customer');
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Refresh token registry — required by the auth service.
+-- Without this table, register and login return 500 because issuing a session
+-- inserts a row here. Added as part of the security remediation: it is what
+-- makes logout, token rotation, and stolen-token detection possible.
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    jti        UUID PRIMARY KEY,
+    user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    issued_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    revoked_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at);
+
+-- NOTE: no seed users.
+-- The previous version inserted two accounts with the literal password_hash
+-- '$2a$10$placeholder_hash', which is not a valid bcrypt digest — bcrypt.compare
+-- errors on it, so those accounts could never log in and only produced 500s.
+-- Register a real account through the UI instead.
 
 -- ============================================================
 -- PRODUCTS DB
@@ -105,19 +128,82 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID,
+    user_id UUID NOT NULL,
     total_amount DECIMAL(10,2) NOT NULL,
     status VARCHAR(50) DEFAULT 'pending',
-    shipping_address TEXT,
+    -- JSONB rather than TEXT: the service stores a structured shipping address.
+    shipping_address JSONB,
+    -- This column was missing. The orders service inserts payment_status on
+    -- every create, so order creation failed with
+    -- "column payment_status of relation orders does not exist".
+    payment_status VARCHAR(50) DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+
 CREATE TABLE IF NOT EXISTS order_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-    product_id UUID,
+    product_id VARCHAR(255) NOT NULL,
     quantity INTEGER NOT NULL,
     price DECIMAL(10,2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+
+-- ============================================================
+-- USERS DB
+--
+-- This database previously had NO tables at all, so every /api/users call
+-- returned a 500. The user service reads these three.
+--
+-- KNOWN LIMITATION: accounts are created in auth_db.users, but profiles are
+-- read from users_db.users. Nothing synchronises the two, so a freshly
+-- registered account has no profile row and /profile returns 404. That is a
+-- pre-existing data-model split, not something introduced here — fixing it
+-- properly means either sharing one user store or publishing a registration
+-- event. See SECURITY-REMEDIATION.md.
+-- ============================================================
+\c users_db
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(50) DEFAULT 'customer',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    currency VARCHAR(10) DEFAULT 'USD',
+    language VARCHAR(10) DEFAULT 'en',
+    newsletter BOOLEAN DEFAULT true,
+    promotions BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_preferences_user ON user_preferences(user_id);
+
+CREATE TABLE IF NOT EXISTS addresses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    street VARCHAR(200),
+    city VARCHAR(200),
+    state VARCHAR(200),
+    zip_code VARCHAR(200),
+    country VARCHAR(200),
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_addresses_user ON addresses(user_id);

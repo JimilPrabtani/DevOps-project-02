@@ -1,0 +1,298 @@
+# =============================================================================
+# Network policies for the boutique namespace.
+#
+# BEFORE: no policies existed. The pod network was completely flat — any pod
+# in the cluster (including a compromised one in another namespace) could open
+# a TCP connection straight to Postgres on 5432, bypassing every application
+# level authorisation check entirely.
+#
+# AFTER: default-deny in both directions, then the minimum set of allowances
+# needed for the app to function.
+#
+# REQUIREMENT: the EKS VPC CNI does not enforce NetworkPolicy unless network
+# policy support is enabled on the aws-node addon:
+#
+#   aws eks update-addon --cluster-name eks-cluster --addon-name vpc-cni \
+#     --configuration-values '{"enableNetworkPolicy":"true"}'
+#
+# Without that, these objects are accepted by the API server but silently do
+# nothing. Verify with: kubectl get networkpolicy -n boutique
+# =============================================================================
+
+---
+# Baseline: deny everything not explicitly permitted below.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: boutique
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# Every pod needs DNS to resolve service names.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-egress
+  namespace: boutique
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+---
+# Prometheus scrapes /metrics on every app pod.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-prometheus-scrape
+  namespace: boutique
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 3001
+        - protocol: TCP
+          port: 3002
+        - protocol: TCP
+          port: 3003
+        - protocol: TCP
+          port: 3004
+        - protocol: TCP
+          port: 3005
+        - protocol: TCP
+          port: 3006
+
+---
+# Frontend: reachable from outside the namespace (ingress/port-forward),
+# and may only talk to the gateway.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-policy
+  namespace: boutique
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - protocol: TCP
+          port: 3001
+
+---
+# Gateway: the single entry point. Accepts traffic from the frontend and may
+# reach every backend service — but NOT the database directly.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-policy
+  namespace: boutique
+spec:
+  podSelector:
+    matchLabels:
+      app: gateway
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 3001
+    # Allow port-forward / ingress controllers from outside the namespace.
+    - ports:
+        - protocol: TCP
+          port: 3001
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: auth
+      ports:
+        - protocol: TCP
+          port: 3002
+    - to:
+        - podSelector:
+            matchLabels:
+              app: product-service
+      ports:
+        - protocol: TCP
+          port: 3003
+    - to:
+        - podSelector:
+            matchLabels:
+              app: order-service
+      ports:
+        - protocol: TCP
+          port: 3004
+    - to:
+        - podSelector:
+            matchLabels:
+              app: orders
+      ports:
+        - protocol: TCP
+          port: 3005
+    - to:
+        - podSelector:
+            matchLabels:
+              app: user-service
+      ports:
+        - protocol: TCP
+          port: 3006
+
+---
+# Backend services: accept traffic only from the gateway (plus orders, which
+# calls the product service for authoritative pricing). Each may reach Postgres.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-services-policy
+  namespace: boutique
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - auth
+          - product-service
+          - order-service
+          - orders
+          - user-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: gateway
+        - podSelector:
+            matchLabels:
+              app: orders
+        - podSelector:
+            matchLabels:
+              app: order-service
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Service-to-service: orders and order-service fetch prices.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: product-service
+      ports:
+        - protocol: TCP
+          port: 3003
+    - to:
+        - podSelector:
+            matchLabels:
+              app: auth
+      ports:
+        - protocol: TCP
+          port: 3002
+
+---
+# Postgres: accepts connections ONLY from the backend services that own a
+# database. Nothing else in the cluster can reach 5432.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-policy
+  namespace: boutique
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - auth
+                  - product-service
+                  - order-service
+                  - orders
+                  - user-service
+      ports:
+        - protocol: TCP
+          port: 5432
+    # The one-shot restore Job needs access too.
+    - from:
+        - podSelector:
+            matchLabels:
+              job-name: boutique-db-restore
+      ports:
+        - protocol: TCP
+          port: 5432
+  # Postgres initiates no outbound connections of its own beyond DNS, which the
+  # allow-dns-egress policy already covers.
+  egress: []
+
+---
+# The database restore Job needs to reach Postgres.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-restore-job-policy
+  namespace: boutique
+spec:
+  podSelector:
+    matchLabels:
+      job-name: boutique-db-restore
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432

@@ -7,26 +7,41 @@ locals {
 module "vpc" {
   source = "./modules/vpc"
 
-  vpc_name     = var.vpc_name
-  cidr_block   = var.vpc_cidr
-  subnet_cidrs = [for s in var.subnets : s.cidr_block]
-  availability_zones = [for s in var.subnets : s.availability_zone]
-  cluster_name     = var.cluster_name
-}
+  vpc_name             = var.vpc_name
+  cidr_block           = var.vpc_cidr
+  subnet_cidrs         = [for s in var.subnets : s.cidr_block]
+  private_subnet_cidrs = [for s in var.private_subnets : s.cidr_block]
+  availability_zones   = [for s in var.subnets : s.availability_zone]
+  cluster_name         = var.cluster_name
 
+  enable_nat_gateway = var.enable_nat_gateway
+  single_nat_gateway = var.single_nat_gateway
+  enable_flow_logs   = var.enable_flow_logs
+}
 
 module "eks" {
   source = "./modules/eks"
 
-  cluster_name     = var.cluster_name
-  node_group_name  = var.node_group_name
+  cluster_name    = var.cluster_name
+  node_group_name = var.node_group_name
 
   instance_types = var.instance_types
+  capacity_type  = var.capacity_type
   min_size       = var.min_size
   desired_size   = var.desired_size
   max_size       = var.max_size
+  disk_size      = var.disk_size
 
-  subnet_ids = module.vpc.subnet_ids
+  vpc_id = module.vpc.vpc_id
+
+  # Control plane ENIs span both tiers; nodes are placed ONLY in private subnets.
+  subnet_ids      = module.vpc.all_subnet_ids
+  node_subnet_ids = module.vpc.private_subnet_ids
+
+  endpoint_public_access    = var.endpoint_public_access
+  public_access_cidrs       = var.public_access_cidrs
+  enable_secrets_encryption = var.enable_secrets_encryption
+
   depends_on = [module.vpc]
 }
 
@@ -54,7 +69,6 @@ resource "aws_eks_access_policy_association" "terraform_admin" {
   depends_on = [aws_eks_access_entry.terraform_admin]
 }
 
-
 data "aws_eks_cluster_auth" "eks" {
   name = module.eks.cluster_name
 }
@@ -69,16 +83,17 @@ provider "kubernetes" {
 provider "helm" {
   alias = "eks"
 
-  kubernetes =  {
+  kubernetes = {
     host                   = module.eks.cluster_endpoint
     cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
     token                  = data.aws_eks_cluster_auth.eks.token
   }
 }
 
-
 module "argocd" {
   source = "./modules/argocd"
+
+  argocd_server_insecure = var.argocd_server_insecure
 
   providers = {
     kubernetes = kubernetes.eks
@@ -87,4 +102,3 @@ module "argocd" {
 
   depends_on = [module.eks, aws_eks_access_policy_association.terraform_admin]
 }
-

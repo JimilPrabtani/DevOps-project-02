@@ -44,22 +44,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const navigate = useNavigate();
   const isOutOfStock = (product.inventory_quantity ?? product.inventory ?? 0) === 0;
 
-  // Enhanced image URL handling with fallbacks
   const getImageSrc = (): string => {
     if (product.imageUrl) {
       return product.imageUrl;
     }
-    
-    // Fallback to placeholder image
     return '/images/placeholder.svg';
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const target = e.currentTarget;
-    // Try the local placeholder image
     target.src = '/images/placeholder.svg';
     target.onerror = () => {
-      // Ultimate fallback - use a data URI for a simple placeholder
       target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik04NSA3NUgxMTVWMTI1SDg1Vjc1WiIgZmlsbD0iI0QxRDFEMSIvPgo8Y2lyY2xlIGN4PSI5MCIgY3k9IjkwIiByPSI1IiBmaWxsPSIjOUExQTFIIi8+CjxwYXRoIGQ9Ik03NSAxMjVIMTI1VjE0MEg3NVYxMjVaIiBmaWxsPSIjQTFBMUExIi8+Cjwvc3ZnPgo=';
     };
   };
@@ -68,15 +63,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
         {[...Array(5)].map((_, index) => (
-          <Box key={index} sx={{ fontSize: '1rem' }}>
+          <Box key={index} sx={{ fontSize: '0.85rem' }}>
             {index < rating ? (
-              <StarIcon sx={{ fontSize: '1rem', color: '#ffc107' }} />
+              <StarIcon sx={{ fontSize: '0.85rem', color: '#FFC24B' }} />
             ) : (
-              <StarBorderIcon sx={{ fontSize: '1rem', color: '#ffc107' }} />
+              <StarBorderIcon sx={{ fontSize: '0.85rem', color: 'rgba(255, 194, 75, 0.4)' }} />
             )}
           </Box>
         ))}
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.55)', fontSize: '0.75rem', ml: 0.5 }}>
           ({product.reviewCount || 0})
         </Typography>
       </Box>
@@ -86,38 +81,33 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const cardSx = variant === 'list' 
     ? { 
         display: 'flex', 
-        height: 200,
-        transition: 'all 0.3s ease-in-out',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4,
-        },
+        height: 190,
+        borderRadius: '16px',
+        overflow: 'hidden',
       }
     : {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'all 0.3s ease-in-out',
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: 4,
-        },
+        borderRadius: '16px',
+        overflow: 'hidden',
       };
 
   const mediaSx = variant === 'list'
     ? {
-        width: 200,
-        height: 200,
+        width: 190,
+        height: 190,
+        objectFit: 'cover',
       }
     : {
-        height: 280,
+        height: 240,
         width: '100%',
         objectFit: 'cover',
       };
 
   return (
     <Card sx={cardSx}>
-      <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: 'relative', overflow: 'hidden' }}>
         <CardMedia
           component="img"
           sx={mediaSx}
@@ -129,13 +119,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {product.isNew && (
           <Chip
             label="NEW"
-            color="secondary"
             size="small"
             sx={{
               position: 'absolute',
-              top: 8,
-              left: 8,
-              fontWeight: 'bold',
+              top: 10,
+              left: 10,
+              backgroundColor: 'rgba(255, 194, 75, 0.2)',
+              color: '#FFC24B',
+              border: '1px solid rgba(255, 194, 75, 0.4)',
+              backdropFilter: 'blur(8px)',
+              fontWeight: 600,
+              fontSize: '0.68rem',
             }}
           />
         )}
@@ -143,13 +137,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
         {(product.discountPercentage && product.discountPercentage > 0) && (
           <Chip
             label={`-${product.discountPercentage}%`}
-            color="error"
             size="small"
             sx={{
               position: 'absolute',
-              top: 8,
-              right: 8,
-              fontWeight: 'bold',
+              top: 10,
+              right: 10,
+              backgroundColor: 'rgba(230, 95, 142, 0.2)',
+              color: '#E65F8E',
+              border: '1px solid rgba(230, 95, 142, 0.4)',
+              backdropFilter: 'blur(8px)',
+              fontWeight: 600,
+              fontSize: '0.68rem',
             }}
           />
         )}
@@ -162,19 +160,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
               left: 0,
               right: 0,
               bottom: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              backgroundColor: 'rgba(12, 8, 16, 0.75)',
+              backdropFilter: 'blur(4px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Typography variant="h6" color="white" fontWeight="bold">
+            <Typography variant="caption" sx={{ color: '#FAF4E8', fontWeight: 600, letterSpacing: '0.05em' }}>
               OUT OF STOCK
             </Typography>
           </Box>
         )}
         
-        <Box sx={{ position: 'absolute', top: 8, right: showQuickView ? 48 : 8, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ position: 'absolute', top: 10, right: (product.discountPercentage && product.discountPercentage > 0) ? 68 : 10, display: 'flex', gap: 0.75 }}>
           {onToggleWishlist && (
             <Tooltip title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}>
               <IconButton
@@ -183,17 +182,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   onToggleWishlist(product.id);
                 }}
                 sx={{
-                  backgroundColor: 'white',
+                  backgroundColor: 'rgba(15, 10, 22, 0.65)',
+                  backdropFilter: 'blur(10px)',
+                  color: '#FAF4E8',
+                  padding: '6px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   '&:hover': {
-                    backgroundColor: 'grey.100',
+                    backgroundColor: 'rgba(15, 10, 22, 0.85)',
                   },
                 }}
                 size="small"
               >
                 {isInWishlist ? (
-                  <WishlistIcon color="error" />
+                  <WishlistIcon sx={{ fontSize: '1rem', color: '#E65F8E' }} />
                 ) : (
-                  <WishlistBorderIcon />
+                  <WishlistBorderIcon sx={{ fontSize: '1rem' }} />
                 )}
               </IconButton>
             </Tooltip>
@@ -207,27 +210,35 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   onQuickView(product);
                 }}
                 sx={{
-                  backgroundColor: 'white',
+                  backgroundColor: 'rgba(15, 10, 22, 0.65)',
+                  backdropFilter: 'blur(10px)',
+                  color: '#FAF4E8',
+                  padding: '6px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   '&:hover': {
-                    backgroundColor: 'grey.100',
+                    backgroundColor: 'rgba(15, 10, 22, 0.85)',
                   },
                 }}
                 size="small"
               >
-                <ViewIcon />
+                <ViewIcon sx={{ fontSize: '1rem' }} />
               </IconButton>
             </Tooltip>
           )}
         </Box>
       </Box>
 
-      <CardContent sx={{ flexGrow: 1, pb: 1 }}>
-        <Box sx={{ mb: 1 }}>
+      <CardContent sx={{ flexGrow: 1, p: 2, pb: 1 }}>
+        <Box sx={{ mb: 0.75 }}>
           <Chip
             label={product.category}
             size="small"
-            variant="outlined"
-            sx={{ fontSize: '0.7rem' }}
+            sx={{
+              fontSize: '0.68rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderColor: 'rgba(255, 255, 255, 0.08)',
+              color: 'rgba(250, 244, 232, 0.7)',
+            }}
           />
         </Box>
         
@@ -236,12 +247,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           component="h3"
           sx={{
             fontWeight: 600,
-            mb: 1,
+            fontSize: '0.98rem',
+            mb: 0.5,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
             WebkitLineClamp: variant === 'list' ? 2 : 1,
             WebkitBoxOrient: 'vertical',
+            color: '#FAF4E8',
           }}
         >
           {product.name}
@@ -249,9 +262,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         <Typography
           variant="body2"
-          color="text.secondary"
           sx={{
-            mb: 2,
+            mb: 1.5,
+            color: 'rgba(214, 200, 180, 0.7)',
+            fontSize: '0.82rem',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
@@ -264,11 +278,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         {product.rating && renderRating(product.rating)}
         
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mt: 1 }}>
           <Typography
             variant="h6"
-            color="primary"
-            fontWeight="bold"
+            sx={{
+              color: '#FF5B24',
+              fontWeight: 600,
+              fontSize: '1.05rem',
+            }}
           >
             ${(() => {
               const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
@@ -278,9 +295,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           
           {product.originalPrice && product.originalPrice > product.price && (
             <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ textDecoration: 'line-through' }}
+              variant="caption"
+              sx={{ textDecoration: 'line-through', color: 'rgba(250, 244, 232, 0.4)' }}
             >
               ${(() => {
                 const price = typeof product.originalPrice === 'string' ? parseFloat(product.originalPrice) : product.originalPrice;
@@ -289,31 +305,38 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </Typography>
           )}
         </Box>
-        
-        <Typography variant="caption" color="text.secondary">
-          {(product.inventory_quantity ?? product.inventory ?? 0) > 0 ? `${product.inventory_quantity ?? product.inventory} in stock` : 'Out of stock'}
-        </Typography>
       </CardContent>
 
-      <CardActions sx={{ pt: 0, flexDirection: 'column', gap: 1 }}>
+      <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
         <Button
           variant="outlined"
           size="small"
           onClick={() => navigate(`/products/${product.id}`)}
-          sx={{ width: '100%' }}
+          sx={{
+            flex: 1,
+            fontSize: '0.78rem',
+            py: 0.5,
+            borderRadius: '10px',
+            borderColor: 'rgba(255, 255, 255, 0.12)',
+          }}
         >
-          View Details
+          Details
         </Button>
         
         <Button
           variant="contained"
           size="small"
-          startIcon={<AddToCartIcon />}
+          startIcon={<AddToCartIcon sx={{ fontSize: '0.9rem' }} />}
           onClick={() => onAddToCart(product)}
           disabled={isOutOfStock}
-          sx={{ width: '100%' }}
+          sx={{
+            flex: 1,
+            fontSize: '0.78rem',
+            py: 0.5,
+            borderRadius: '10px',
+          }}
         >
-          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+          {isOutOfStock ? 'Sold' : 'Add'}
         </Button>
       </CardActions>
     </Card>

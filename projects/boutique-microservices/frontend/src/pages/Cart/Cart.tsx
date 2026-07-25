@@ -4,16 +4,11 @@ import {
   Typography,
   Box,
   Button,
-  Card,
-  CardContent,
   CardMedia,
   IconButton,
   Grid,
   Paper,
   Divider,
-  Stepper,
-  Step,
-  StepLabel,
   Alert,
   Snackbar,
 } from '@mui/material';
@@ -35,7 +30,6 @@ const Cart: React.FC = () => {
   const [removedItemName, setRemovedItemName] = useState('');
 
   const handleCheckout = () => {
-    // In a real app, this would navigate to checkout
     navigate('/checkout');
   };
 
@@ -59,18 +53,18 @@ const Cart: React.FC = () => {
     return (
       <Container maxWidth="md">
         <Box sx={{ py: 8, textAlign: 'center' }}>
-          <ShoppingBagIcon sx={{ fontSize: 80, color: '#d4af37', mb: 3 }} />
-          <Typography variant="h3" component="h1" gutterBottom>
+          <ShoppingBagIcon sx={{ fontSize: 64, color: '#FF5B24', mb: 2, opacity: 0.8 }} />
+          <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 700, fontSize: '1.75rem' }}>
             Your Cart is Empty
           </Typography>
-          <Typography variant="h6" color="text.secondary" paragraph sx={{ mb: 4 }}>
+          <Typography variant="body2" color="text.secondary" paragraph sx={{ mb: 3.5, color: 'rgba(250, 244, 232, 0.6)' }}>
             Looks like you haven't added any products to your cart yet.
           </Typography>
           <Button
             variant="contained"
-            size="large"
+            size="medium"
             href="/products"
-            sx={{ px: 4, py: 1.5 }}
+            sx={{ px: 3.5, py: 1, borderRadius: '12px' }}
           >
             Start Shopping
           </Button>
@@ -86,133 +80,124 @@ const Cart: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
+      <Box sx={{ py: 3 }}>
+        <Typography variant="h2" component="h1" gutterBottom sx={{ fontWeight: 700, mb: 0.5 }}>
           Shopping Cart
         </Typography>
-        <Typography variant="h6" color="text.secondary" paragraph>
-          {items.length} {items.length === 1 ? 'Item' : 'Items'} in your cart
+        <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)', mb: 3 }}>
+          {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
         </Typography>
         
-        <Grid container spacing={4}>
+        <Grid container spacing={3.5}>
           <Grid size={{ xs: 12, md: 8 }}>
-            <Paper elevation={2} sx={{ p: 3 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2.5,
+                borderRadius: '20px',
+                backgroundColor: 'rgba(28, 21, 40, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
               {items.map((item, index) => (
                 <Box key={item.id}>
                   <Box sx={{ py: 2 }}>
-                    <Grid container spacing={3} alignItems="center">
-                      <Grid size={{ xs: 12, sm: 2 }}>
+                    <Grid container spacing={2.5} alignItems="center">
+                      <Grid size={{ xs: 12, sm: 2.5 }}>
                         <CardMedia
                           component="img"
                           sx={{
-                            height: 120,
+                            height: 90,
                             objectFit: 'cover',
-                            borderRadius: 2,
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                            borderRadius: '12px',
                           }}
-                          image={item.imageUrl}
+                          image={item.imageUrl || '/images/placeholder.svg'}
                           alt={item.name}
                         />
                       </Grid>
                       
-                      <Grid size={{ xs: 12, sm: 5 }}>
-                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                      <Grid size={{ xs: 12, sm: 4.5 }}>
+                        <Typography variant="h6" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.98rem' }}>
                           {item.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                          {item.category}
+                        <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.5)', display: 'block', mb: 0.5 }}>
+                          Category: {item.category}
                         </Typography>
-                        <Typography variant="body1" color="primary" sx={{ fontWeight: 600 }}>
-                          ${typeof item.price === 'string' ? parseFloat(item.price).toFixed(2) : item.price.toFixed(2)} each
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#FF5B24' }}>
+                          ${typeof item.price === 'string' ? parseFloat(item.price).toFixed(2) : item.price.toFixed(2)}
                         </Typography>
                       </Grid>
                       
-                      <Grid size={{ xs: 12, sm: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Grid size={{ xs: 12, sm: 2.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px', p: 0.25, width: 'fit-content' }}>
                           <IconButton
+                            size="small"
                             onClick={() => handleQuantityChange(item.id, -1)}
                             disabled={item.quantity <= 1}
-                            sx={{
-                              backgroundColor: 'background.paper',
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              '&:hover': {
-                                backgroundColor: 'action.hover',
-                              },
-                            }}
+                            sx={{ color: '#FAF4E8' }}
                           >
-                            <RemoveIcon />
+                            <RemoveIcon sx={{ fontSize: '0.85rem' }} />
                           </IconButton>
                           <Typography 
+                            variant="body2"
                             sx={{ 
-                              minWidth: '3rem', 
-                              textAlign: 'center',
+                              px: 1.5,
                               fontWeight: 600,
-                              fontSize: '1.1rem'
                             }}
                           >
                             {item.quantity}
                           </Typography>
                           <IconButton
+                            size="small"
                             onClick={() => handleQuantityChange(item.id, 1)}
                             disabled={item.quantity >= item.inventory}
-                            sx={{
-                              backgroundColor: 'background.paper',
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              '&:hover': {
-                                backgroundColor: 'action.hover',
-                              },
-                            }}
+                            sx={{ color: '#FAF4E8' }}
                           >
-                            <AddIcon />
+                            <AddIcon sx={{ fontSize: '0.85rem' }} />
                           </IconButton>
                         </Box>
-                        {item.inventory <= 5 && item.inventory > 0 && (
-                          <Typography variant="caption" color="warning.main">
-                            Only {item.inventory} left in stock!
-                          </Typography>
-                        )}
                       </Grid>
                       
-                      <Grid size={{ xs: 12, sm: 2 }}>
+                      <Grid size={{ xs: 12, sm: 2.5 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '1.05rem' }}>
                             ${((typeof item.price === 'string' ? parseFloat(item.price) : item.price) * item.quantity).toFixed(2)}
                           </Typography>
                           <IconButton
                             onClick={() => handleRemoveItem(item.id, item.name)}
-                            color="error"
+                            size="small"
                             sx={{
+                              color: 'rgba(230, 95, 142, 0.8)',
                               '&:hover': {
-                                backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                                backgroundColor: 'rgba(230, 95, 142, 0.12)',
                               },
                             }}
                           >
-                            <DeleteIcon />
+                            <DeleteIcon sx={{ fontSize: '1.1rem' }} />
                           </IconButton>
                         </Box>
                       </Grid>
                     </Grid>
                   </Box>
-                  {index < items.length - 1 && <Divider />}
+                  {index < items.length - 1 && <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.06)' }} />}
                 </Box>
               ))}
             </Paper>
             
-            <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'space-between' }}>
+            <Box sx={{ mt: 2.5, display: 'flex', gap: 1.5, justifyContent: 'space-between' }}>
               <Button
                 variant="outlined"
                 href="/products"
-                sx={{ px: 3 }}
+                size="small"
+                sx={{ borderRadius: '10px' }}
               >
                 Continue Shopping
               </Button>
               <Button
                 variant="outlined"
                 onClick={clearCart}
-                color="error"
-                sx={{ px: 3 }}
+                size="small"
+                sx={{ borderRadius: '10px', color: '#E65F8E', borderColor: 'rgba(230, 95, 142, 0.3)' }}
               >
                 Clear Cart
               </Button>
@@ -220,45 +205,55 @@ const Cart: React.FC = () => {
           </Grid>
           
           <Grid size={{ xs: 12, md: 4 }}>
-            <Paper elevation={2} sx={{ p: 3, position: 'sticky', top: 24 }}>
-              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 3,
+                position: 'sticky',
+                top: 88,
+                borderRadius: '20px',
+                backgroundColor: 'rgba(28, 21, 40, 0.75)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
                 Order Summary
               </Typography>
               
-              <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="body1">Subtotal:</Typography>
-                  <Typography variant="body1">${subtotal.toFixed(2)}</Typography>
+              <Box sx={{ my: 2.5 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>Subtotal:</Typography>
+                  <Typography variant="body2">${subtotal.toFixed(2)}</Typography>
                 </Box>
                 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <ShippingIcon fontSize="small" />
-                    <Typography variant="body1">Shipping:</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <ShippingIcon sx={{ fontSize: '0.95rem', color: '#FFC24B' }} />
+                    <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>Shipping:</Typography>
                   </Box>
-                  <Typography variant="body1">
+                  <Typography variant="body2">
                     {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
                   </Typography>
                 </Box>
                 
                 {shipping > 0 && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                  <Typography variant="caption" sx={{ display: 'block', mb: 1.5, color: 'rgba(250, 244, 232, 0.5)' }}>
                     Add ${(500 - subtotal).toFixed(2)} more for free shipping
                   </Typography>
                 )}
                 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="body1">Tax:</Typography>
-                  <Typography variant="body1">${tax.toFixed(2)}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.7)' }}>Estimated Tax:</Typography>
+                  <Typography variant="body2">${tax.toFixed(2)}</Typography>
                 </Box>
                 
-                <Divider sx={{ my: 2 }} />
+                <Divider sx={{ my: 2, borderColor: 'rgba(255, 255, 255, 0.08)' }} />
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                     Total:
                   </Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#d4af37' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#FF5B24' }}>
                     ${finalTotal.toFixed(2)}
                   </Typography>
                 </Box>
@@ -266,19 +261,18 @@ const Cart: React.FC = () => {
               
               <Button
                 variant="contained"
-                color="secondary"
                 size="large"
                 onClick={handleCheckout}
                 fullWidth
-                sx={{ mb: 2, py: 1.5 }}
+                sx={{ mb: 2, py: 1.2, borderRadius: '12px' }}
               >
                 Proceed to Checkout
               </Button>
               
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center', mb: 2 }}>
-                <SecurityIcon fontSize="small" color="action" />
-                <Typography variant="caption" color="text.secondary">
-                  Secure Checkout Process
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, justifyContent: 'center' }}>
+                <SecurityIcon sx={{ fontSize: '0.9rem', color: 'rgba(250, 244, 232, 0.5)' }} />
+                <Typography variant="caption" sx={{ color: 'rgba(250, 244, 232, 0.5)' }}>
+                  Encrypted & Secure Checkout
                 </Typography>
               </Box>
             </Paper>
@@ -292,7 +286,7 @@ const Cart: React.FC = () => {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ borderRadius: '10px' }}>
           {removedItemName} removed from cart
         </Alert>
       </Snackbar>

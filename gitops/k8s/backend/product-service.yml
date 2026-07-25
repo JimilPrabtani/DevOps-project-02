@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: product-service
   namespace: boutique
+  labels:
+    app: product-service
 spec:
   replicas: 1
   selector:
@@ -13,14 +15,36 @@ spec:
       labels:
         app: product-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      automountServiceAccountToken: false
       containers:
         - name: product-service
           image: 123209654419.dkr.ecr.us-east-1.amazonaws.com/product-service:6070b4fdb4c98fe92df77f37683c82ab6c8a758f
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 3003
+            - name: http
+              containerPort: 3003
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           env:
             - name: NODE_ENV
-              value: development
+              value: production
             - name: PORT
               value: "3003"
             - name: DATABASE_URL
@@ -28,19 +52,51 @@ spec:
                 secretKeyRef:
                   name: boutique-secrets
                   key: PRODUCTS_DB_URL
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: boutique-secrets
+                  key: JWT_ACCESS_SECRET
+          envFrom:
+            - configMapRef:
+                name: boutique-config
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      volumes:
+        - name: tmp
+          emptyDir: {}
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
   name: product-service
   namespace: boutique
+  labels:
+    app: product-service
 spec:
   selector:
     app: product-service
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 3003
-      targetPort: 3003
+      targetPort: http
   type: ClusterIP

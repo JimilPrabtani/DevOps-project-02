@@ -25,7 +25,7 @@ const Login: React.FC = () => {
       await login(email, password);
       navigate('/');
     } catch (error) {
-      // Error is handled by the auth context
+      // Handled by context
     }
   };
 
@@ -36,17 +36,33 @@ const Login: React.FC = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          minHeight: '100vh',
+          minHeight: '80vh',
           justifyContent: 'center',
         }}
       >
-        <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Sign In
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            width: '100%',
+            borderRadius: '20px',
+            backgroundColor: 'rgba(28, 21, 40, 0.75)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography component="h1" variant="h3" sx={{ fontWeight: 700, fontSize: '1.75rem', mb: 0.5 }}>
+              Sign In
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'rgba(250, 244, 232, 0.6)' }}>
+              Welcome back to Sunfreaks
+            </Typography>
+          </Box>
           
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: '10px' }}>
               {error}
             </Alert>
           )}
@@ -80,7 +96,8 @@ const Login: React.FC = () => {
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2 }}
+              size="large"
+              sx={{ mt: 3, mb: 2.5, py: 1.2, borderRadius: '12px' }}
               disabled={loading}
             >
               {loading ? 'Signing In...' : 'Sign In'}
@@ -88,7 +105,7 @@ const Login: React.FC = () => {
             
             <Box sx={{ textAlign: 'center' }}>
               <Link to="/register" style={{ textDecoration: 'none' }}>
-                <Typography variant="body2" color="primary">
+                <Typography variant="body2" sx={{ color: '#FF5B24', fontWeight: 500 }}>
                   Don't have an account? Sign Up
                 </Typography>
               </Link>
