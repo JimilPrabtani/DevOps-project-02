@@ -22,6 +22,12 @@
 
 ---
 
+<p align="center">
+  <img src="./docs/assets/DevSecOps-AI-Architecture.png" alt="Architecture diagram" width="100%" />
+</p>
+
+---
+
 ## 🎯 What This Is
 
 A production-style DevOps project that demonstrates how modern systems are designed, deployed, and operated — with AI-powered operations built in.
