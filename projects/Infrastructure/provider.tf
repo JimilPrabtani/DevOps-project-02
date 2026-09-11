@@ -48,7 +48,7 @@ terraform {
   # ---------------------------------------------------------------------------
   # backend "s3" {
   #   bucket       = "<your-tf-state-bucket>"
-  #   key          = "devops-ai-playbook/infrastructure.tfstate"
+  #   key          = "flowstack/infrastructure.tfstate"
   #   region       = "us-east-1"
   #   encrypt      = true
   #   use_lockfile = true
@@ -60,7 +60,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "devops-ai-playbook"
+      Project     = "flowstack"
       ManagedBy   = "terraform"
       Environment = "demo"
     }

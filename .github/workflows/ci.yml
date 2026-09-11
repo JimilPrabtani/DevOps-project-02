@@ -144,7 +144,7 @@ jobs:
       #     },
       #     "StringLike": {
       #       "token.actions.githubusercontent.com:sub":
-      #         "repo:JimilPrabtani/DevOps-project-02:*"
+      #         "repo:JimilPrabtani/Flowstack:*"
       #     }
       #   }
       #
