@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/jimilprabtani/DevOps-Project-02.git'
+    repoURL: 'https://github.com/JimilPrabtani/Flowstack.git'
     targetRevision: main
     path: gitops
   destination:
